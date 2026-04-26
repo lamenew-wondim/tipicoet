@@ -1,0 +1,91 @@
+'use client';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import AuthModal from './AuthModal';
+
+export default function Header() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
+    isOpen: false,
+    mode: 'login'
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    setIsLoggedIn(!!token);
+
+    const onOpenDrawer = () => setDrawerOpen(true);
+    window.addEventListener('open-mobile-drawer', onOpenDrawer);
+    return () => window.removeEventListener('open-mobile-drawer', onOpenDrawer);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    window.location.reload();
+  };
+
+  return (
+    <>
+      <header className="topbar" style={{ zIndex: 100 }}>
+        <div className="topbar-left">
+          <div className="top-menu-btn" style={{ cursor: 'pointer', padding: 8 }} onClick={() => setDrawerOpen(true)}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
+          </div>
+          <Link href="/" className="logo-text">
+            <div className="logo-accent"></div> TIPICO
+          </Link>
+        </div>
+
+        <div className="topbar-right">
+          {isLoggedIn ? (
+            <div className="logged-in-container">
+              <div className="balance-section">
+                <div className="balance-label">Balance</div>
+                <div className="balance-amount">0.00 Birr</div>
+              </div>
+
+              <div className="user-profile-trigger"
+                onMouseEnter={() => setShowUserMenu(true)}
+                onMouseLeave={() => setShowUserMenu(false)}
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                <div className="user-avatar">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+
+                {showUserMenu && (
+                  <div className="user-dropdown-menu">
+                    <div className="dropdown-item">Deposit</div>
+                    <div className="dropdown-item">Withdrawal</div>
+                    <Link href="/results" className="dropdown-item">Bet History</Link>
+                    <div className="dropdown-item">Betslip check</div>
+                    <div className="dropdown-item">Transaction History</div>
+                    <div className="dropdown-item">Account settings</div>
+                    <div className="dropdown-item logout" onClick={handleLogout}>Log out</div>
+                  </div>
+                )}
+              </div>
+
+              <button className="btn-primary deposit-btn">Deposit</button>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => setAuthModal({ isOpen: true, mode: 'login' })} className="btn-secondary">Log In</button>
+              <button onClick={() => setAuthModal({ isOpen: true, mode: 'register' })} className="btn-primary">Sign Up</button>
+            </>
+          )}
+        </div>
+      </header>
+
+      <AuthModal
+        isOpen={authModal.isOpen}
+        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
+        initialMode={authModal.mode}
+      />
+    </>
+  );
+}
