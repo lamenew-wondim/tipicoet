@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import MatchCard from '../MatchCard';
 
 export default function ResultsPage() {
-  const [matches, setMatches] = useState([]);
+  const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

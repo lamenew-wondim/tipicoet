@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 export default function TeamsPage() {
   const searchParams = useSearchParams();
   const leagueId = searchParams.get('league');
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
