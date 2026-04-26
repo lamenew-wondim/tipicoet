@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function TeamsPage() {
+function TeamsContent() {
   const searchParams = useSearchParams();
   const leagueId = searchParams?.get('league');
   const [teams, setTeams] = useState<any[]>([]);
@@ -43,5 +43,13 @@ export default function TeamsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense fallback={<div className="loader"></div>}>
+      <TeamsContent />
+    </Suspense>
   );
 }
