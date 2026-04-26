@@ -293,9 +293,9 @@ function MatchDetailsContent() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {stats[0].statistics.map((stat: any, i: number) => {
                   const homeVal = stat.value || 0;
-                  const awayVal = stats[1]?.statistics[i]?.value || 0;
+                  const awayVal = stats[1]?.statistics?.[i]?.value || 0;
                   const homePercent = (typeof homeVal === 'string' && homeVal.includes('%')) ? parseInt(homeVal) :
-                    (homeVal + awayVal === 0 ? 50 : (homeVal / (homeVal + awayVal)) * 100);
+                    (homeVal + (typeof awayVal === 'number' ? awayVal : 0) === 0 ? 50 : (homeVal / (homeVal + (typeof awayVal === 'number' ? awayVal : 0))) * 100);
 
                   return (
                     <div key={i} className="stat-row">
