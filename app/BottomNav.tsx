@@ -116,6 +116,14 @@ export default function BottomNav() {
             href={item.href}
             className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             style={item.isAccent ? { color: '#ff6b00' } : undefined}
+            onClick={(e) => {
+              if (item.label === 'Sports') {
+                window.dispatchEvent(new CustomEvent('open-mobile-drawer'));
+              }
+              if (item.href === '#') {
+                e.preventDefault();
+              }
+            }}
           >
             <div className="bottom-nav-icon">{item.icon}</div>
             <span className="bottom-nav-label" style={item.isAccent ? { fontWeight: 700 } : undefined}>{item.label}</span>
