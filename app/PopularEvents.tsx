@@ -19,22 +19,22 @@ export default function PopularEvents() {
       try {
         // 1. Fetch live matches first (always top priority)
         const liveRes = await fetch('/api/football/live');
+        if (!liveRes.ok) throw new Error('Live fetch failed');
         const liveData = await liveRes.json();
         const livePool = liveData.response || [];
 
         // 2. Fetch upcoming fixtures from TOP LEAGUES specifically to ensure they are tracked.
-        // We pick the most important ones to fetch explicitly.
-        const focusLeagues = [39, 140, 78, 135, 61, 2, 3]; // PL, La Liga, Bund, SerieA, Ligue1, UCL, UEL
+        const focusLeagues = [39, 140, 78, 135, 61, 2, 3]; 
         
-        // Fetch in parallel for efficiency
         const fixturesPromises = focusLeagues.map(id => 
-          fetch(`/api/football/fixtures?days=7&league=${id}`).then(res => res.json())
+          fetch(`/api/football/fixtures?days=7&league=${id}`)
+            .then(res => res.ok ? res.json() : { response: [] })
+            .catch(() => ({ response: [] }))
         );
         
         const fixturesResults = await Promise.all(fixturesPromises);
         const fixturesPool = fixturesResults.flatMap(res => res.response || []);
 
-        // 3. Combine and rank
         const combined = [...livePool, ...fixturesPool];
 
         // Rank a wider pool first, then enforce UI mix rules:

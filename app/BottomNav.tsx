@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const navItems = [
     {
@@ -98,8 +99,7 @@ export default function BottomNav() {
                 if (!isLoggedIn) {
                   window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'login' }));
                 } else {
-                  // If logged in, maybe open deposit modal. For now, do nothing.
-                  console.log('Deposit clicked - user is logged in');
+                  router.push('/deposit');
                 }
               }}
             >

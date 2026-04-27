@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AuthModal from './AuthModal';
 import SettingsModal from './SettingsModal';
 
 export default function Header() {
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -96,7 +98,7 @@ export default function Header() {
 
                 {showUserMenu && (
                   <div className="user-dropdown-menu">
-                    <div className="dropdown-item">Deposit</div>
+                    <div className="dropdown-item" onClick={() => router.push('/deposit')}>Deposit</div>
                     <div className="dropdown-item">Withdrawal</div>
                     <Link href="/results" className="dropdown-item">Bet History</Link>
                     <div className="dropdown-item">Betslip check</div>
@@ -107,7 +109,7 @@ export default function Header() {
                 )}
               </div>
 
-              <button className="btn-primary deposit-btn">Deposit</button>
+              <button className="btn-primary deposit-btn" onClick={() => router.push('/deposit')}>Deposit</button>
             </div>
           ) : (
             <>

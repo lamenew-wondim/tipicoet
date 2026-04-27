@@ -82,6 +82,8 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       setSuccess(true);
       localStorage.setItem('auth_token', data.idToken);
       localStorage.setItem('user_role', data.role || 'user');
+      localStorage.setItem('user_uid', data.localId || '');
+      localStorage.setItem('user_phone', `251${cleanPhone}`);
       window.dispatchEvent(new Event('auth-state-changed'));
       
       setTimeout(() => {

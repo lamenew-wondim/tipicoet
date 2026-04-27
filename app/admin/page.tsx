@@ -1,64 +1,154 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function AdminPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+export default function AdminDashboard() {
+  const [pendingDepositsCount, setPendingDepositsCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     const role = localStorage.getItem('user_role');
-    if (role === 'admin') {
-      setIsAdmin(true);
-      setLoading(false);
-    } else {
+    if (role !== 'admin') {
       router.push('/');
     }
+    fetchPendingCount();
   }, [router]);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0e0e0e', color: 'white' }}>
-        <h2>Verifying Admin Status...</h2>
-      </div>
-    );
-  }
+  const fetchPendingCount = async () => {
+    try {
+      const res = await fetch('/api/admin/deposits/count');
+      const data = await res.json();
+      if (data.success) setPendingDepositsCount(data.count);
+    } catch (err) {
+      console.error('Count error:', err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_uid');
+    localStorage.removeItem('user_phone');
+    router.push('/');
+  };
+
+  const adminButtons = [
+    { label: 'Deposit', icon: '💰', color: '#4caf50', hasBadge: true },
+    { label: 'Withdrawal', icon: '🏧', color: '#2196f3' },
+    { label: 'Tickets', icon: '🎫', color: '#ffc107' },
+    { label: 'Create Bet', icon: '📝', color: '#9c27b0' },
+    { label: 'Users', icon: '👥', color: '#673ab7' },
+    { label: 'Withdrawal M', icon: '💳', color: '#e91e63' },
+    { label: 'Deposit M', icon: '💸', color: '#00bcd4' },
+    { label: 'Logout', icon: '🚪', color: '#ff4444' },
+  ];
 
   return (
-    <div style={{ padding: '40px', background: '#f4f7fe', minHeight: '100vh', color: '#333' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '24px' }}>Admin Dashboard</h1>
-        <div style={{ background: 'white', padding: '32px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-          <h3>Welcome to the Admin Panel</h3>
-          <p>This page is only accessible to administrators.</p>
-          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-            <div style={{ background: '#f4f7fe', padding: '20px', borderRadius: '12px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#888', textTransform: 'uppercase' }}>Users</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>-</div>
+    <div className="admin-dashboard-overlay">
+      <div className="admin-container">
+        <div className="admin-grid">
+          {adminButtons.map((btn, i) => (
+            <div 
+              key={i} 
+              className="admin-tile"
+              onClick={() => {
+                if (btn.label === 'Deposit') router.push('/admin/deposits');
+                if (btn.label === 'Deposit M') router.push('/admin/deposit-m');
+                if (btn.label === 'Withdrawal M') router.push('/admin/withdrawal-m');
+                if (btn.label === 'Logout') handleLogout();
+              }}
+            >
+              <div className="tile-icon-wrapper">
+                <div className="tile-icon" style={{ background: `${btn.color}20`, color: btn.color }}>
+                  <span>{btn.icon}</span>
+                </div>
+                {btn.hasBadge && pendingDepositsCount > 0 && (
+                  <div className="tile-badge">{pendingDepositsCount}</div>
+                )}
+              </div>
+              <span className="tile-label">{btn.label}</span>
             </div>
-            <div style={{ background: '#f4f7fe', padding: '20px', borderRadius: '12px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#888', textTransform: 'uppercase' }}>Total Bets</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>-</div>
-            </div>
-            <div style={{ background: '#f4f7fe', padding: '20px', borderRadius: '12px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#888', textTransform: 'uppercase' }}>Revenue</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>-</div>
-            </div>
-          </div>
+          ))}
         </div>
-        
-        <button 
-          onClick={() => {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_role');
-            window.location.href = '/';
-          }}
-          style={{ marginTop: '24px', background: '#333', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}
-        >
-          Logout
-        </button>
       </div>
+
+      <style jsx>{`
+        .admin-dashboard-overlay {
+          position: fixed;
+          inset: 0;
+          background: #f4f7fe;
+          z-index: 20000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 40px 16px;
+          overflow-y: auto;
+        }
+        .admin-container {
+          width: 100%;
+          max-width: 480px;
+        }
+        .admin-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+        .admin-tile {
+          background: #fff;
+          border-radius: 20px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+          border: 1px solid #fff;
+          min-height: 120px;
+        }
+        .admin-tile:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+          border-color: #eee;
+        }
+        .tile-icon-wrapper {
+          position: relative;
+        }
+        .tile-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+        }
+        .tile-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: #2196f3;
+          color: white;
+          min-width: 22px;
+          height: 22px;
+          border-radius: 11px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 800;
+          border: 2px solid #fff;
+          padding: 0 4px;
+        }
+        .tile-label {
+          font-size: 15px;
+          font-weight: 700;
+          color: #333;
+        }
+      `}</style>
     </div>
   );
 }
