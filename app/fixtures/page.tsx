@@ -271,7 +271,7 @@ function FixturesContent() {
     <div>
       {!leagueId && !searchQuery && <PopularEvents />}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 className="page-title" style={{ margin: 0 }}>Pre-Match</h1>
         <div className="search-bar" style={{ width: 280, margin: 0 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>

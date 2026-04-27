@@ -142,7 +142,7 @@ function LiveContent() {
   return (
     <div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <h1 className="page-title" style={{ margin: 0 }}>Live In-Play</h1>
           {oddsChecking && <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>Updating Odds...</span>}

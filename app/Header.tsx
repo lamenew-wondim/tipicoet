@@ -27,6 +27,17 @@ export default function Header() {
     window.location.reload();
   };
 
+  // Dynamic balance simulation (would be from state/API)
+  const currentBalance = "0.00 Birr";
+  
+  const getBalanceStyle = (text: string) => {
+    const len = text.length;
+    if (len > 22) return { fontSize: '10px' };
+    if (len > 18) return { fontSize: '12px' };
+    if (len > 14) return { fontSize: '14px' };
+    return {};
+  };
+
   return (
     <>
       <header className="topbar" style={{ zIndex: 100 }}>
@@ -35,7 +46,7 @@ export default function Header() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
           </div>
           <Link href="/" className="logo-text">
-            <div className="logo-accent"></div> TIPICO
+            TIPICO
           </Link>
         </div>
 
@@ -44,7 +55,7 @@ export default function Header() {
             <div className="logged-in-container">
               <div className="balance-section">
                 <div className="balance-label">Balance</div>
-                <div className="balance-amount">0.00 Birr</div>
+                <div className="balance-amount" style={getBalanceStyle(currentBalance)}>{currentBalance}</div>
               </div>
 
               <div className="user-profile-trigger"

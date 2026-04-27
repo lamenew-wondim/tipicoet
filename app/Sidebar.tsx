@@ -75,7 +75,7 @@ function SidebarSection({ item, isLiveOpen, currentLeague, pathname, daysFilter,
                 )
               })}
             </div>
-            <Link href={isLiveOpen ? "/live" : "/leagues"} style={{ display: 'block', textAlign: 'center', background: '#222', color: 'white', padding: 12, borderRadius: 8, marginTop: 16, fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: '0.2s' }} className="sidebar-hover-item">
+            <Link href={isLiveOpen ? "/live" : "/leagues"} style={{ display: 'block', textAlign: 'center', background: '#222', color: 'white', padding: 12, borderRadius: 8, marginTop: 16, fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: '0.2s' }} className="sidebar-hover-item" onClick={onClose}>
               Show all
             </Link>
           </div>
@@ -184,10 +184,10 @@ function SidebarContent() {
 
   return (
     <>
-      {!pathname?.startsWith('/match/') && (
+      {(
         <div className="mobile-only mobile-inline-nav" style={{ padding: '16px 12px 0 12px' }}>
           <div className="sub-nav-row" style={{ paddingBottom: 0, marginBottom: !isLiveOpen ? 16 : 0 }}>
-            <button onClick={() => setMobileMenuOpen(true)} className="sub-btn dark" style={{ flex: 1.2, gap: 8, height: 40 }}>
+            <button onClick={() => setMobileMenuOpen(true)} className="sub-btn dark" style={{ flex: 1, gap: 4, height: 40 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
               All Sports
             </button>
@@ -197,7 +197,7 @@ function SidebarContent() {
                 router.push(searchQuery ? `/live?q=${searchQuery}` : '/live');
               }}
               className="sub-btn orange"
-              style={{ flex: 1.8, height: 40, border: 'none', cursor: 'pointer', color: 'white', fontWeight: 700, fontSize: 14 }}
+              style={{ flex: 1.5, height: 40, border: 'none', cursor: 'pointer', color: 'white', fontWeight: 700, fontSize: 13 }}
             >
               Open Live
             </button>
@@ -344,6 +344,7 @@ function SidebarContent() {
                               href={`/fixtures?league=${item.id}&q=${searchQuery}`}
                               style={{ padding: '8px 12px', background: 'var(--bg-panel)', borderRadius: 8, textDecoration: 'none', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 10, border: '1px solid transparent' }}
                               className="sidebar-search-item"
+                              onClick={() => setMobileMenuOpen(false)}
                             >
                               <div style={{ width: 24, height: 24, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>🏆</div>
                               <div style={{ overflow: 'hidden' }}>
@@ -361,6 +362,7 @@ function SidebarContent() {
                             href={`/fixtures?league=${m.league.id}&q=${searchQuery}`}
                             style={{ padding: '10px 12px', background: 'var(--bg-panel)', borderRadius: 8, textDecoration: 'none', color: 'var(--text-main)', border: '1px solid transparent', transition: '0.2s', display: 'block' }}
                             className="sidebar-search-item"
+                            onClick={() => setMobileMenuOpen(false)}
                           >
                             <div style={{ fontSize: 10, color: '#999', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               Football. {m.league.country}. {m.league.name}
