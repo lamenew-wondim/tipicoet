@@ -139,6 +139,8 @@ function MatchDetailsContent() {
   if (loading) return <div className="loader"></div>;
   if (!match) return <div className="error-msg">Match not found.</div>;
 
+  const isLive = isStatusLive(match?.fixture?.status?.short);
+
   return (
     <div className="match-detail-container">
       {/* Header / Breadcrumb */}

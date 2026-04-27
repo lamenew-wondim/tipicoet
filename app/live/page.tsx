@@ -39,18 +39,14 @@ function LiveContent() {
     setSearchQuery(localSearch);
   }, [localSearch]);
 
-  // Fetch leagues once for search discovery
+  // Fetch leagues once for search discovery (from Firestore)
   useEffect(() => {
-    fetch('/api/football/leagues')
-      .then(res => res.json())
-      .then(data => {
-        const list = data.response?.map((l: any) => ({
-          id: l.league.id,
-          name: `${l.country.name}. ${l.league.name}`,
-          logo: l.country.flag || l.league.logo
-        })) || [];
-        setAllLeagues(list);
-      });
+    const unsub = onSnapshot(doc(db, 'config', 'leagues_list'), (snap) => {
+      if (snap.exists()) {
+        setAllLeagues(snap.data().leagues || []);
+      }
+    });
+    return () => unsub();
   }, []);
 
   // REAL-TIME FIRESTORE SYNC

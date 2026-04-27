@@ -348,6 +348,42 @@ async function syncSettle() {
   }
 }
 
+// 7. Sync Leagues List (Alphabetical)
+async function syncLeagues() {
+  if (!(await canMakeRequest())) return;
+
+  addToQueue(async () => {
+    console.log("[SYNC] Fetching Leagues List...");
+    try {
+      const data = await fetchWithRetry(`https://${API_HOST}/leagues`, {
+        headers: { "x-apisports-key": API_KEY }
+      });
+      await incrementDailyCount();
+
+      const leagues = data.response || [];
+      const list = leagues
+        .filter(l => l.seasons && l.seasons.some(s => s.current))
+        .map(l => ({
+          id: l.league.id,
+          name: `${l.country.name}. ${l.league.name}`,
+          logo: l.country.flag || l.league.logo
+        }));
+      
+      // Save as one large document for fast retrieval, or individual docs?
+      // Individual docs are better for searching, but one large doc is cheaper for "All Leagues" page.
+      // We'll do both: one large for the picker, and individual for detail lookups.
+      await db.collection('config').doc('leagues_list').set({ 
+        leagues: list,
+        lastSync: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log(`[SYNC] Leagues Sync Complete. (${list.length} leagues)`);
+    } catch (err) {
+      console.error("[SYNC] Leagues Sync Error:", err.message);
+    }
+  });
+}
+
 /**
  * SCHEDULER
  */
@@ -359,6 +395,7 @@ syncUpcoming();
 syncOdds();
 syncMatchDetails();
 syncFinished();
+syncLeagues();
 // Settlement runs after finished matches are synced
 setTimeout(syncSettle, 60000); 
 
@@ -368,7 +405,8 @@ setInterval(syncUpcoming, 600000);     // Every 10m
 setInterval(syncOdds, 900000);         // Every 15m
 setInterval(syncMatchDetails, 120000); // Every 2m
 setInterval(syncFinished, 3600000);    // Every 1h
-setInterval(syncSettle, 3600000);      // Every 1h (after syncFinished)
+setInterval(syncSettle, 3600000);      // Every 1h
+setInterval(syncLeagues, 86400000);    // Every 24h (after syncFinished)
 
 // Daily reset check (runs every hour)
 setInterval(async () => {

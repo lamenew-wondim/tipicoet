@@ -3,10 +3,11 @@ import Link from 'next/link';
 import { OddsValues, extractBestOdds } from '../lib/odds';
 import { useEffect, useState } from 'react';
 import { toggleBet, getBetslip } from '../lib/betslip';
+import { db } from './lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 /**
- * MatchCard - Now fetches its own odds if none are provided
- * to ensure fast display just like the match detail page.
+ * MatchCard - Now fetches its own odds from Firestore
  */
 export default function MatchCard({
   match,
@@ -23,7 +24,7 @@ export default function MatchCard({
   const statusShort = match.fixture.status.short;
   
   const [localOdds, setLocalOdds] = useState<OddsValues | null>(initialOdds || null);
-  const [loading, setLoading] = useState(!initialOdds && statusShort === 'NS');
+  const [loading, setLoading] = useState(!initialOdds);
   const [activeSelection, setActiveSelection] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,43 +62,19 @@ export default function MatchCard({
       return;
     }
 
-    if (statusShort !== 'NS' && !isLive) return;
-
-    let isMounted = true;
-    const fetchOdds = async () => {
-      try {
-        const endpoint = isLive
-          ? `/api/football/odds/live?fixture_id=${match.fixture.id}`
-          : `/api/football/odds?fixture_id=${match.fixture.id}`;
-        
-        const res = await fetch(endpoint);
-        const data = await res.json();
-        
-        if (isMounted) {
-          const leagueOdds = data.response?.[0];
-          if (leagueOdds) {
-            const bestOdds = extractBestOdds(leagueOdds);
-            setLocalOdds(bestOdds);
-          }
-        }
-      } catch (err) {
-        console.error('MatchCard fetch odds error:', err);
-      } finally {
-        if (isMounted) setLoading(false);
+    // REAL-TIME FIRESTORE SYNC for this specific match's odds
+    const unsub = onSnapshot(doc(db, 'odds', String(match.fixture.id)), (snap) => {
+      if (snap.exists()) {
+        const bestOdds = extractBestOdds(snap.data());
+        setLocalOdds(bestOdds);
+      } else {
+        setLocalOdds(null);
       }
-    };
+      setLoading(false);
+    });
 
-    // Add a random jitter to prevent 100 components from hitting the API at the exact same millisecond
-    const delay = Math.random() * 1500;
-    const timer = setTimeout(() => {
-      if (isMounted) fetchOdds();
-    }, delay);
-
-    return () => { 
-      isMounted = false; 
-      clearTimeout(timer);
-    };
-  }, [initialOdds, match.fixture.id, isLive, statusShort]);
+    return () => unsub();
+  }, [initialOdds, match.fixture.id]);
 
   const getStatusLabel = () => {
     if (statusShort === 'NS') return 'Scheduled';

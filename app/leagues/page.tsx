@@ -1,25 +1,26 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { db } from '../lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function AllLeaguesPage() {
    const [leagues, setLeagues] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetch('/api/football/leagues')
-      .then(res => res.json())
-      .then(data => {
-         const list = data.response 
-           ? data.response.filter((l:any) => l.seasons && l.seasons.some((s:any) => s.current)).map((l:any) => ({ id: l.league.id, name: `${l.country.name}. ${l.league.name}`, logo: l.country.flag || l.league.logo })) 
-           : [];
+   useEffect(() => {
+     const unsub = onSnapshot(doc(db, 'config', 'leagues_list'), (snap) => {
+       if (snap.exists()) {
+         const list = snap.data().leagues || [];
          // Sort alphabetically
          list.sort((a:any, b:any) => a.name.localeCompare(b.name));
          setLeagues(list);
-         setLoading(false);
-      });
-  }, []);
+       }
+       setLoading(false);
+     });
+     return () => unsub();
+   }, []);
 
    const filteredLeagues = leagues.filter(l => 
      l.name.toLowerCase().includes(searchQuery.toLowerCase())
