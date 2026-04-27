@@ -670,9 +670,11 @@ body {
   justify-content: center;
   font-size: 15px;
   font-weight: 800;
-  transition: 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: #000;
   border: none;
+  cursor: pointer;
+  user-select: none;
 }
 
 .odd-tile:hover {
@@ -2089,6 +2091,28 @@ body {
     background: transparent;
     border: none;
     cursor: pointer;
+  }
+
+  .betslip-badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: var(--accent);
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  }
+
+  .bottom-nav-item.active .betslip-badge {
+    border-color: #222;
   }
 
   .bottom-nav-item.active {

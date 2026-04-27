@@ -3,7 +3,10 @@ import { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { extractBestOdds } from '../../../lib/odds';
+import { getBetslip, toggleBet } from '../../../lib/betslip';
 import PrematchInfo from './PrematchInfo';
+import { db } from '../../../lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 /** Determine if a fixture status string means the game is currently live */
 function isStatusLive(short: string | undefined): boolean {
@@ -43,89 +46,93 @@ function MatchDetailsContent() {
   const [standings, setStandings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('venue');
+  const [activeTab, setActiveTab] = useState('odds');
+  const [activeSelections, setActiveSelections] = useState<Record<string, string>>({});
 
-  const isLive = isStatusLive(match?.fixture?.status?.short);
+  useEffect(() => {
+    const updateSelections = () => {
+      const current = getBetslip();
+      const map: Record<string, string> = {};
+      current.forEach(b => map[b.matchId.toString()] = b.selection);
+      setActiveSelections(map);
+    };
+    updateSelections();
+    window.addEventListener('betslip-updated', updateSelections);
+    return () => window.removeEventListener('betslip-updated', updateSelections);
+  }, []);
 
-  const fetchData = async () => {
-    try {
-      // Step 1: fetch fixture first so we know the real live/prematch status
-      const fixtureRes = await fetch(`/api/football/fixture?id=${id}`);
-      const fixtureData = await fixtureRes.json();
-      const updatedMatch = fixtureData.response?.[0];
-      setMatch(updatedMatch);
+  const handleToggle = (e: React.MouseEvent, type: any, val: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const numVal = Number(val);
+    if (!numVal || isNaN(numVal)) return;
+    
+    toggleBet({
+      matchId: Number(id),
+      homeTeam: match.teams.home.name,
+      awayTeam: match.teams.away.name,
+      leagueName: match.league.name,
+      selection: type,
+      odd: numVal,
+      timestamp: Date.now()
+    });
+  };
 
-      // Step 2: decide odds endpoint based on FRESH fixture status (not stale state)
-      const statusShort = updatedMatch?.fixture?.status?.short;
-      const live = isStatusLive(statusShort);
-      const oddsEndpoint = live
-        ? `/api/football/odds/live?fixture_id=${id}`
-        : `/api/football/odds?fixture_id=${id}`;
+  const currentSelection = activeSelections[id];
 
-      // Step 3: fetch odds, stats, lineups, h2h, standings in parallel
-      const homeId = updatedMatch?.teams?.home?.id;
-      const awayId = updatedMatch?.teams?.away?.id;
-      const leagueId = updatedMatch?.league?.id;
-      const season = updatedMatch?.league?.season;
+  // REAL-TIME FIRESTORE SYNC
+  useEffect(() => {
+    if (!id) return;
+    window.scrollTo(0, 0);
+    setLoading(true);
 
-      const [oddsRes, statsRes, lineupRes, h2hRes, standingsRes] = await Promise.all([
-        fetch(oddsEndpoint).then(r => r.json()),
-        fetch(`/api/football/stats?id=${id}`).then(r => r.json()),
-        fetch(`/api/football/lineups?id=${id}`).then(r => r.json()),
-        (!live && homeId && awayId) ? fetch(`/api/football/h2h?h2h=${homeId}-${awayId}`).then(r => r.json()) : Promise.resolve({ response: [] }),
-        (!live && leagueId && season) ? fetch(`/api/football/standings?league=${leagueId}&season=${season}`).then(r => r.json()) : Promise.resolve({ response: [] })
-      ]);
+    // 1. Listen to Match Data (Check Live first, then Fixtures)
+    const unsubLive = onSnapshot(doc(db, 'live_matches', id), (snap) => {
+      if (snap.exists()) {
+        setMatch(snap.data());
+        setLoading(false);
+      } else {
+        // If not in live, check fixtures
+        onSnapshot(doc(db, 'fixtures', id), (fSnap) => {
+          if (fSnap.exists()) {
+            setMatch(fSnap.data());
+          }
+          setLoading(false);
+        });
+      }
+    });
 
-      // Step 4: parse odds
-      const leagueOdds = oddsRes.response?.[0];
-      const bets = extractBets(leagueOdds);
-      if (bets && bets.length > 0) {
-        setOdds({ bookmakers: [{ bets }] });
+    // 2. Listen to Odds
+    const unsubOdds = onSnapshot(doc(db, 'odds', id), (snap) => {
+      if (snap.exists()) {
+        const leagueOdds = snap.data();
+        const bets = extractBets(leagueOdds);
+        if (bets && bets.length > 0) {
+          setOdds({ bookmakers: [{ bets }] });
+        } else {
+          setOdds(null);
+        }
       } else {
         setOdds(null);
       }
       setOddsLoading(false);
+    });
 
-      setStats(statsRes.response || []);
-      setLineups(lineupRes.response || []);
-      setH2h(h2hRes?.response || []);
+    // 3. Listen to Stats
+    const unsubStats = onSnapshot(doc(db, 'match_stats', id), (snap) => {
+      if (snap.exists()) setStats(snap.data().response || []);
+    });
 
-      const std = standingsRes?.response?.[0]?.league?.standings?.[0] || [];
-      setStandings(std);
+    // 4. Listen to Lineups
+    const unsubLineups = onSnapshot(doc(db, 'match_lineups', id), (snap) => {
+      if (snap.exists()) setLineups(snap.data().response || []);
+    });
 
-      setLoading(false);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setLoading(false);
-      setOddsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const resetScrollTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-
-      const mainContent = document.querySelector('.main-content') as HTMLElement | null;
-      if (mainContent) {
-        mainContent.scrollTop = 0;
-      }
-    };
-
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-
-    resetScrollTop();
-    requestAnimationFrame(resetScrollTop);
-    const t = setTimeout(resetScrollTop, 0);
-
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
     return () => {
-      clearInterval(interval);
-      clearTimeout(t);
+      unsubLive();
+      unsubOdds();
+      unsubStats();
+      unsubLineups();
     };
   }, [id]);
 
@@ -240,15 +247,27 @@ function MatchDetailsContent() {
                     <div className="market-box" style={{ marginBottom: 8 }}>
                       <div className="market-header">1 × 2 — Match Winner</div>
                       <div className="market-values" style={{ display: 'flex', gap: 8 }}>
-                        <div className="market-odd-tile" style={{ flex: 1, textAlign: 'center' }}>
+                        <div 
+                          className={`market-odd-tile ${currentSelection === 'home' ? 'selected' : ''}`}
+                          style={{ flex: 1, textAlign: 'center' }}
+                          onClick={(e) => handleToggle(e, 'home', bestOdds.home)}
+                        >
                           <span className="m-odd-lbl">{match.teams.home.name}</span>
                           <span className="m-odd-val" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{bestOdds.home ?? '-'}</span>
                         </div>
-                        <div className="market-odd-tile" style={{ flex: 1, textAlign: 'center' }}>
+                        <div 
+                          className={`market-odd-tile ${currentSelection === 'draw' ? 'selected' : ''}`}
+                          style={{ flex: 1, textAlign: 'center' }}
+                          onClick={(e) => handleToggle(e, 'draw', bestOdds.draw)}
+                        >
                           <span className="m-odd-lbl">Draw</span>
                           <span className="m-odd-val" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{bestOdds.draw ?? '-'}</span>
                         </div>
-                        <div className="market-odd-tile" style={{ flex: 1, textAlign: 'center' }}>
+                        <div 
+                          className={`market-odd-tile ${currentSelection === 'away' ? 'selected' : ''}`}
+                          style={{ flex: 1, textAlign: 'center' }}
+                          onClick={(e) => handleToggle(e, 'away', bestOdds.away)}
+                        >
                           <span className="m-odd-lbl">{match.teams.away.name}</span>
                           <span className="m-odd-val" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{bestOdds.away ?? '-'}</span>
                         </div>
@@ -266,8 +285,18 @@ function MatchDetailsContent() {
                         if (label === 'Home') label = match.teams.home.name;
                         if (label === 'Away') label = match.teams.away.name;
                         
+                        let selType = v.value;
+                        if (selType === 'Home') selType = 'home';
+                        if (selType === 'Draw' || selType === 'X') selType = 'draw';
+                        if (selType === 'Away') selType = 'away';
+                        
                         return (
-                          <div key={vIdx} className="market-odd-tile">
+                          <div 
+                            key={vIdx} 
+                            className={`market-odd-tile ${currentSelection === selType ? 'selected' : ''}`}
+                            onClick={(e) => handleToggle(e, selType, v.odd)}
+                            style={{ cursor: 'pointer' }}
+                          >
                             <span className="m-odd-lbl">{label}</span>
                             <span className="m-odd-val">{v.odd}</span>
                           </div>

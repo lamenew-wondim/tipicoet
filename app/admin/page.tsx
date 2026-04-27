@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
   const [pendingDepositsCount, setPendingDepositsCount] = useState(0);
+  const [pendingWithdrawalsCount, setPendingWithdrawalsCount] = useState(0);
+  const [pendingTicketsCount, setPendingTicketsCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -11,14 +13,22 @@ export default function AdminDashboard() {
     if (role !== 'admin') {
       router.push('/');
     }
-    fetchPendingCount();
+    fetchCounts();
   }, [router]);
 
-  const fetchPendingCount = async () => {
+  const fetchCounts = async () => {
     try {
-      const res = await fetch('/api/admin/deposits/count');
-      const data = await res.json();
-      if (data.success) setPendingDepositsCount(data.count);
+      const [depRes, withRes, tickRes] = await Promise.all([
+        fetch('/api/admin/deposits/count'),
+        fetch('/api/admin/withdrawals/count'),
+        fetch('/api/admin/tickets/count')
+      ]);
+      const depData = await depRes.json();
+      const withData = await withRes.json();
+      const tickData = await tickRes.json();
+      if (depData.success) setPendingDepositsCount(depData.count);
+      if (withData.success) setPendingWithdrawalsCount(withData.count);
+      if (tickData.success) setPendingTicketsCount(tickData.count);
     } catch (err) {
       console.error('Count error:', err);
     }
@@ -29,14 +39,13 @@ export default function AdminDashboard() {
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_uid');
     localStorage.removeItem('user_phone');
-    // Use window.location.href to force a full reload and reset Header state
     window.location.href = '/';
   };
 
   const adminButtons = [
-    { label: 'Deposit', icon: '💰', color: '#4caf50', hasBadge: true },
-    { label: 'Withdrawal', icon: '🏧', color: '#2196f3' },
-    { label: 'Tickets', icon: '🎫', color: '#ffc107' },
+    { label: 'Deposit', icon: '💰', color: '#4caf50', badgeCount: pendingDepositsCount },
+    { label: 'Withdrawal', icon: '🏧', color: '#2196f3', badgeCount: pendingWithdrawalsCount },
+    { label: 'Tickets', icon: '🎫', color: '#ffc107', badgeCount: pendingTicketsCount },
     { label: 'Create Bet', icon: '📝', color: '#9c27b0' },
     { label: 'Users', icon: '👥', color: '#673ab7' },
     { label: 'Withdrawal M', icon: '💳', color: '#e91e63' },
@@ -54,8 +63,10 @@ export default function AdminDashboard() {
               className="admin-tile"
               onClick={() => {
                 if (btn.label === 'Deposit') router.push('/admin/deposits');
+                if (btn.label === 'Withdrawal') router.push('/admin/withdrawals');
                 if (btn.label === 'Deposit M') router.push('/admin/deposit-m');
                 if (btn.label === 'Withdrawal M') router.push('/admin/withdrawal-m');
+                if (btn.label === 'Tickets') router.push('/admin/tickets');
                 if (btn.label === 'Logout') handleLogout();
               }}
             >
@@ -63,8 +74,10 @@ export default function AdminDashboard() {
                 <div className="tile-icon" style={{ background: `${btn.color}20`, color: btn.color }}>
                   <span>{btn.icon}</span>
                 </div>
-                {btn.hasBadge && pendingDepositsCount > 0 && (
-                  <div className="tile-badge">{pendingDepositsCount}</div>
+                {(btn.badgeCount ?? 0) > 0 && (
+                  <div className="tile-badge" style={{ background: btn.color === '#4caf50' ? '#2196f3' : '#ff4444' }}>
+                    {btn.badgeCount}
+                  </div>
                 )}
               </div>
               <span className="tile-label">{btn.label}</span>

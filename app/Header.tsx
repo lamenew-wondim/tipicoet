@@ -41,6 +41,12 @@ export default function Header() {
       if (token && uid) {
         fetchBalance(uid);
       }
+
+      // Auto-open settings if flagged after login
+      if (localStorage.getItem('auto_open_settings') === 'true') {
+        localStorage.removeItem('auto_open_settings');
+        setShowSettings(true);
+      }
     };
 
     initHeader();
@@ -135,10 +141,10 @@ export default function Header() {
                 {showUserMenu && (
                   <div className="user-dropdown-menu">
                     <div className="dropdown-item" onClick={() => router.push('/deposit')}>Deposit</div>
-                    <div className="dropdown-item">Withdrawal</div>
-                    <Link href="/results" className="dropdown-item">Bet History</Link>
-                    <div className="dropdown-item">Betslip check</div>
-                    <div className="dropdown-item">Transaction History</div>
+                    <Link href="/withdraw" className="dropdown-item">Withdrawal</Link>
+                    <Link href="/bethistory" className="dropdown-item">Bet History</Link>
+                    <Link href="/resultcheck" className="dropdown-item">Result Check</Link>
+                    <Link href="/transactions" className="dropdown-item">Transaction History</Link>
                      <div className="dropdown-item" onClick={() => setShowSettings(true)}>Account settings</div>
                     <div className="dropdown-item logout" onClick={handleLogout}>Log out</div>
                   </div>

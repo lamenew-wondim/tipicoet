@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { OddsValues, extractBestOdds } from '../lib/odds';
 import { useEffect, useState } from 'react';
+import { toggleBet, getBetslip } from '../lib/betslip';
 
 /**
  * MatchCard - Now fetches its own odds if none are provided
@@ -23,6 +24,35 @@ export default function MatchCard({
   
   const [localOdds, setLocalOdds] = useState<OddsValues | null>(initialOdds || null);
   const [loading, setLoading] = useState(!initialOdds && statusShort === 'NS');
+  const [activeSelection, setActiveSelection] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateSelection = () => {
+      const current = getBetslip();
+      const matchBet = current.find(b => b.matchId === match.fixture.id);
+      setActiveSelection(matchBet ? matchBet.selection : null);
+    };
+    updateSelection();
+    window.addEventListener('betslip-updated', updateSelection);
+    return () => window.removeEventListener('betslip-updated', updateSelection);
+  }, [match.fixture.id]);
+
+  const handleToggle = (e: React.MouseEvent, type: 'home' | 'draw' | 'away', val: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const numVal = Number(val);
+    if (!numVal || isNaN(numVal)) return;
+    
+    toggleBet({
+      matchId: match.fixture.id,
+      homeTeam: match.teams.home.name,
+      awayTeam: match.teams.away.name,
+      leagueName: match.league.name,
+      selection: type,
+      odd: numVal,
+      timestamp: Date.now()
+    });
+  };
 
   useEffect(() => {
     if (initialOdds) {
@@ -91,6 +121,12 @@ export default function MatchCard({
     return localOdds[key];
   };
 
+  const displayVal = (key: keyof OddsValues) => {
+    if (loading) return null;
+    if (!localOdds || !localOdds[key]) return null;
+    return localOdds[key];
+  };
+
   const targetUrl = isLive
     ? `/match/${match.fixture.id}?live=true`
     : `/match/${match.fixture.id}`;
@@ -141,16 +177,25 @@ export default function MatchCard({
         </div>
 
         {/* Odds Row */}
-        <div className="odds-row" onClick={e => e.preventDefault()}>
-          <div className="odd-tile">
+        <div className="odds-row">
+          <div 
+            className={`odd-tile ${activeSelection === 'home' ? 'selected' : ''}`}
+            onClick={(e) => handleToggle(e, 'home', displayVal('home'))}
+          >
             <span className="odd-lbl">1</span>
             <span>{display('home')}</span>
           </div>
-          <div className="odd-tile">
+          <div 
+            className={`odd-tile ${activeSelection === 'draw' ? 'selected' : ''}`}
+            onClick={(e) => handleToggle(e, 'draw', displayVal('draw'))}
+          >
             <span className="odd-lbl">X</span>
             <span>{display('draw')}</span>
           </div>
-          <div className="odd-tile">
+          <div 
+            className={`odd-tile ${activeSelection === 'away' ? 'selected' : ''}`}
+            onClick={(e) => handleToggle(e, 'away', displayVal('away'))}
+          >
             <span className="odd-lbl">2</span>
             <span>{display('away')}</span>
           </div>

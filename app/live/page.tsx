@@ -5,131 +5,91 @@ import { useSearchParams } from 'next/navigation';
 import PopularEvents from '../PopularEvents';
 import { extractBestOdds, OddsValues } from '../../lib/odds';
 import Link from 'next/link';
+import { db } from '../../lib/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 
+
+// Simple global cache to preserve live data on back navigation
+let liveMatchesCache: any[] = [];
+let liveOddsCache: Record<number, OddsValues> = {};
 
 function LiveContent() {
   const searchParams = useSearchParams();
   const leagueId = searchParams?.get('league');
   
-  const [allMatches, setAllMatches] = useState<any[]>([]);
-  const [visibleMatches, setVisibleMatches] = useState<any[]>([]);
-  const [oddsMap, setOddsMap] = useState<Record<number, OddsValues>>({});
+  const [allMatches, setAllMatches] = useState<any[]>(liveMatchesCache);
+  const [visibleMatches, setVisibleMatches] = useState<any[]>(liveMatchesCache);
+  const [oddsMap, setOddsMap] = useState<Record<number, OddsValues>>(liveOddsCache);
   
-  const [loading, setLoading] = useState(true);
-   const [oddsChecking, setOddsChecking] = useState(false);
-   const urlQuery = searchParams?.get('q') || '';
-   const [searchQuery, setSearchQuery] = useState(urlQuery);
-   const [allLeagues, setAllLeagues] = useState<any[]>([]);
+  const [loading, setLoading] = useState(liveMatchesCache.length === 0);
+  const [oddsChecking, setOddsChecking] = useState(false);
+  const urlQuery = searchParams?.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [allLeagues, setAllLeagues] = useState<any[]>([]);
 
-   // Sync with URL (sidebar search)
-   useEffect(() => {
-     setSearchQuery(urlQuery);
-     setLocalSearch(urlQuery);
-   }, [urlQuery]);
+  // Sync with URL (sidebar search)
+  useEffect(() => {
+    setSearchQuery(urlQuery);
+    setLocalSearch(urlQuery);
+  }, [urlQuery]);
 
-   const [localSearch, setLocalSearch] = useState(urlQuery);
-
-   useEffect(() => {
-     setSearchQuery(localSearch);
-   }, [localSearch]);
-
-   // Fetch leagues once for search discovery
-   useEffect(() => {
-     fetch('/api/football/leagues')
-       .then(res => res.json())
-       .then(data => {
-         const list = data.response?.map((l: any) => ({
-           id: l.league.id,
-           name: `${l.country.name}. ${l.league.name}`,
-           logo: l.country.flag || l.league.logo
-         })) || [];
-         setAllLeagues(list);
-       });
-   }, []);
-
-  const fetchLive = () => {
-    // 1. Strict Polling Control: Stop if tab is hidden
-    if (typeof document !== 'undefined' && document.hidden) return;
-
-    setLoading(allMatches.length === 0); // Only show loader on initial fetch
-    setOddsChecking(false);
-    
-    fetch(`/api/football/live${leagueId ? `?league=${leagueId}` : ''}`)
-      .then(res => res.json())
-      .then(async data => {
-        const fixtureList: any[] = data.response || [];
-        setAllMatches(fixtureList);
-        setLoading(false);
-        
-        // 2. Filter: only show matches that are actually live (in-play)
-        const liveMatches = fixtureList.filter(m => {
-          const s = m.fixture.status.short;
-          return s === '1H' || s === '2H' || s === 'HT';
-        });
-
-        if (liveMatches.length === 0) {
-          setVisibleMatches([]);
-          setOddsChecking(false);
-          return;
-        }
-
-        setOddsChecking(true);
-
-        /**
-         * OPTIMIZATION: Bulk Live Odds Fetch
-         * Instead of fetching odds for every fixture individually, we fetch by league.
-         */
-        try {
-          // Fix: only fetch bulk live odds if leagueId is a valid number
-          const oddsUrl = (leagueId && !isNaN(parseInt(leagueId)))
-            ? `/api/football/odds/live?league=${leagueId}`
-            : null;
-
-          if (oddsUrl) {
-            const odRes = await fetch(oddsUrl);
-            const odData = await odRes.json();
-            
-            const newMap: Record<number, OddsValues> = {};
-            
-            if (odData.response && Array.isArray(odData.response)) {
-              odData.response.forEach((item: any) => {
-                const best = extractBestOdds(item);
-                if (best) newMap[item.fixture.id] = best;
-              });
-            }
-            setOddsMap(prev => ({ ...prev, ...newMap }));
-          }
-          
-          setVisibleMatches(liveMatches);
-         } catch (err) {
-           console.error("Live bulk odds fetch failed:", err);
-           setVisibleMatches(liveMatches);
-         }
-
-        setOddsChecking(false);
-      })
-      .catch((err) => {
-        console.error("Live fetch error:", err);
-        setLoading(false);
-        setOddsChecking(false);
-      });
-  };
+  const [localSearch, setLocalSearch] = useState(urlQuery);
 
   useEffect(() => {
-    fetchLive();
+    setSearchQuery(localSearch);
+  }, [localSearch]);
 
-    // 3. Visibility API: Refresh immediately when tab becomes visible
-    const handleVisibilityChange = () => {
-      if (!document.hidden) fetchLive();
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+  // Fetch leagues once for search discovery
+  useEffect(() => {
+    fetch('/api/football/leagues')
+      .then(res => res.json())
+      .then(data => {
+        const list = data.response?.map((l: any) => ({
+          id: l.league.id,
+          name: `${l.country.name}. ${l.league.name}`,
+          logo: l.country.flag || l.league.logo
+        })) || [];
+        setAllLeagues(list);
+      });
+  }, []);
 
-    // Refresh every 45-60s
-    const interval = setInterval(fetchLive, 60000); 
+  // REAL-TIME FIRESTORE SYNC
+  useEffect(() => {
+    const qLive = collection(db, 'live_matches');
+    
+    setLoading(allMatches.length === 0);
+    
+    // 1. Listen to Live Matches
+    const unsubscribeLive = onSnapshot(qLive, (snapshot) => {
+      const matches = snapshot.docs.map(doc => doc.data());
+      setAllMatches(matches);
+      
+      // Filter only matches in-play (1H, 2H, HT)
+      const filtered = matches.filter(m => {
+        const s = m.fixture?.status?.short;
+        return s === '1H' || s === '2H' || s === 'HT';
+      });
+      
+      setVisibleMatches(filtered);
+      liveMatchesCache = filtered;
+      setLoading(false);
+    });
+
+    // 2. Listen to Odds
+    const qOdds = collection(db, 'odds');
+    const unsubscribeOdds = onSnapshot(qOdds, (snapshot) => {
+      const newMap: Record<number, OddsValues> = {};
+      snapshot.docs.forEach(doc => {
+        const best = extractBestOdds(doc.data());
+        if (best) newMap[Number(doc.id)] = best;
+      });
+      setOddsMap(newMap);
+      liveOddsCache = newMap;
+    });
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
+      unsubscribeLive();
+      unsubscribeOdds();
     };
   }, [leagueId]);
 

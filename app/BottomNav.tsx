@@ -66,20 +66,26 @@ export default function BottomNav() {
   ];
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [betsCount, setBetsCount] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     setIsLoggedIn(!!token);
-
-    const handleStorageChange = () => {
-      setIsLoggedIn(!!localStorage.getItem('auth_token'));
+    
+    const updateCount = () => {
+      const stored = localStorage.getItem('tipico_betslip');
+      if (stored) setBetsCount(JSON.parse(stored).length);
+      else setBetsCount(0);
     };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('auth-state-changed', handleStorageChange);
+    updateCount();
+
+    window.addEventListener('storage', updateCount);
+    window.addEventListener('auth-state-changed', () => setIsLoggedIn(!!localStorage.getItem('auth_token')));
+    window.addEventListener('betslip-updated', (e: any) => setBetsCount(e.detail.length));
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('auth-state-changed', handleStorageChange);
+      window.removeEventListener('storage', updateCount);
+      window.removeEventListener('betslip-updated', updateCount);
     };
   }, []);
 
@@ -110,7 +116,6 @@ export default function BottomNav() {
           );
         }
 
-
         return (
           <Link
             key={idx}
@@ -124,12 +129,21 @@ export default function BottomNav() {
               if (item.label === 'Menu') {
                 window.dispatchEvent(new CustomEvent('open-menu-drawer'));
               }
+              if (item.label === 'Betslip') {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent('open-betslip'));
+              }
               if (item.href === '#') {
                 e.preventDefault();
               }
             }}
           >
-            <div className="bottom-nav-icon">{item.icon}</div>
+            <div className="bottom-nav-icon" style={{ position: 'relative' }}>
+              {item.icon}
+              {item.label === 'Betslip' && betsCount > 0 && (
+                <div className="betslip-badge">{betsCount}</div>
+              )}
+            </div>
             <span className="bottom-nav-label" style={item.isAccent ? { fontWeight: 700 } : undefined}>{item.label}</span>
           </Link>
         );

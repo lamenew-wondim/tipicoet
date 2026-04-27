@@ -89,12 +89,26 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       setTimeout(() => {
         onClose();
         const redirectToDeposit = localStorage.getItem('redirect_to_deposit');
+        const redirectToResultCheck = localStorage.getItem('redirect_to_resultcheck');
         
         if (data.role === 'admin') {
           window.location.href = '/admin';
         } else if (redirectToDeposit === 'true') {
           localStorage.removeItem('redirect_to_deposit');
           window.location.href = '/deposit';
+        } else if (redirectToResultCheck === 'true') {
+          localStorage.removeItem('redirect_to_resultcheck');
+          window.location.href = '/resultcheck';
+        } else if (localStorage.getItem('open_settings_after_login') === 'true') {
+          localStorage.removeItem('open_settings_after_login');
+          window.location.reload();
+          localStorage.setItem('auto_open_settings', 'true');
+        } else if (localStorage.getItem('redirect_to_withdraw') === 'true') {
+          localStorage.removeItem('redirect_to_withdraw');
+          window.location.href = '/withdraw';
+        } else if (localStorage.getItem('redirect_to_transactions') === 'true') {
+          localStorage.removeItem('redirect_to_transactions');
+          window.location.href = '/transactions';
         } else {
           window.location.reload();
         }

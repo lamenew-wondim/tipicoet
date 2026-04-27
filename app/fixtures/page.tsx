@@ -5,6 +5,8 @@ import MatchCard from '../MatchCard';
 import { useSearchParams } from 'next/navigation';
 import PopularEvents from '../PopularEvents';
 import { extractBestOdds, OddsValues } from '../../lib/odds';
+import { db } from '../../lib/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 // Leagues to prioritize on the landing page (in display order)
 const PRIORITY_LEAGUES = [
@@ -91,15 +93,19 @@ function LeagueGroup({ leagueId, leagueName, leagueLogo, country, matches, oddsM
 }
 
 
+// Simple global cache to preserve data on back navigation
+let fixturesCache: any[] = [];
+let fixturesOddsCache: Record<number, OddsValues> = {};
+
 function FixturesContent() {
   const searchParams = useSearchParams();
   const leagueId = searchParams?.get('league');
   const daysFilter = searchParams?.get('days') || '0';
 
-  const [allMatches, setAllMatches] = useState<any[]>([]);
-  const [visibleMatches, setVisibleMatches] = useState<any[]>([]);
-  const [oddsMap, setOddsMap] = useState<Record<number, OddsValues>>({});
-  const [loading, setLoading] = useState(true);
+  const [allMatches, setAllMatches] = useState<any[]>(fixturesCache);
+  const [visibleMatches, setVisibleMatches] = useState<any[]>(fixturesCache);
+  const [oddsMap, setOddsMap] = useState<Record<number, OddsValues>>(fixturesOddsCache);
+  const [loading, setLoading] = useState(fixturesCache.length === 0);
   const [oddsChecking, setOddsChecking] = useState(false);
   const urlQuery = searchParams?.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(urlQuery);
@@ -116,7 +122,6 @@ function FixturesContent() {
   // Debounce global search fetch
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Only trigger global API search if query is at least 2 chars
       if (localSearch.length >= 2 || localSearch.length === 0) {
         setSearchQuery(localSearch);
       }
@@ -138,118 +143,47 @@ function FixturesContent() {
       });
   }, []);
 
+  // REAL-TIME FIRESTORE SYNC
   useEffect(() => {
-    setLoading(true);
-    setOddsChecking(false);
-    setAllMatches([]);
-    setVisibleMatches([]);
-    setOddsMap({});
+    setLoading(allMatches.length === 0);
+    
+    // 1. Listen to Fixtures
+    const qFixtures = collection(db, 'fixtures');
+    const unsubscribeFixtures = onSnapshot(qFixtures, (snapshot) => {
+      const matches = snapshot.docs.map(doc => doc.data());
+      
+      // Filter by league if needed, or by TOP_LEAGUES on landing
+      let filtered = matches;
+      if (leagueId) {
+        filtered = matches.filter(m => String(m.league?.id) === String(leagueId));
+      } else {
+        const topIds = PRIORITY_LEAGUES.map(l => l.id);
+        filtered = matches.filter(m => topIds.includes(m.league?.id));
+      }
+      
+      setAllMatches(filtered);
+      setVisibleMatches(filtered);
+      fixturesCache = filtered;
+      setLoading(false);
+    });
 
-    const currentYear = new Date().getFullYear();
-
-    // Landing page: fetch from all priority leagues in parallel
-    if (!leagueId && !searchQuery) {
-      const leagueIds = PRIORITY_LEAGUES.map(l => l.id);
-      Promise.all(
-        leagueIds.map(id =>
-          fetch(`/api/football/fixtures?days=${daysFilter}&league=${id}`)
-            .then(r => r.json())
-            .catch(() => ({ response: [] }))
-        )
-      ).then(async results => {
-        const fixtureList = results.flatMap(r => r.response || []);
-        setAllMatches(fixtureList);
-        setLoading(false);
-
-        if (fixtureList.length === 0) return;
-        setOddsChecking(true);
-
-        // Fetch odds for each priority league
-        const oddsResults = await Promise.allSettled(
-          leagueIds.map(id => {
-            const fIds = fixtureList.filter(f => f.league?.id === id).map(f => f.fixture.id).join(',');
-            if (!fIds) return Promise.resolve({ value: { odds: {} } });
-            return fetch(`/api/football/odds/bulk?ids=${fIds}`).then(r => r.json());
-          })
-        );
-
-        const mergedOddsMap: Record<number, OddsValues> = {};
-        oddsResults.forEach(res => {
-          if (res.status === 'fulfilled' && res.value?.odds) {
-            Object.assign(mergedOddsMap, res.value.odds);
-          }
-        });
-
-        setOddsMap(mergedOddsMap);
-        // Show all fixtures (not just ones with odds) on landing page
-        setVisibleMatches(fixtureList);
-        setOddsChecking(false);
+    // 2. Listen to Odds
+    const qOdds = collection(db, 'odds');
+    const unsubscribeOdds = onSnapshot(qOdds, (snapshot) => {
+      const newMap: Record<number, OddsValues> = {};
+      snapshot.docs.forEach(doc => {
+        const best = extractBestOdds(doc.data());
+        if (best) newMap[Number(doc.id)] = best;
       });
-      return;
-    }
+      setOddsMap(newMap);
+      fixturesOddsCache = newMap;
+    });
 
-    const fetchUrl = searchQuery
-      ? `/api/football/fixtures?days=7`
-      : `/api/football/fixtures?days=${daysFilter}${leagueId ? `&league=${leagueId}` : ''}`;
-
-    fetch(fetchUrl)
-      .then(res => res.json())
-      .then(async (data) => {
-        const fixtureList: any[] = data.response || [];
-        setAllMatches(fixtureList);
-        setLoading(false);
-
-        if (fixtureList.length === 0) return;
-        setOddsChecking(true);
-
-        if (leagueId) {
-          try {
-            const fIds = fixtureList.map(f => f.fixture.id).join(',');
-            const oddsRes = await fetch(`/api/football/odds/bulk?ids=${fIds}`);
-            const oddsData = await oddsRes.json();
-            if (oddsData.odds) setOddsMap(oddsData.odds);
-            setVisibleMatches(fixtureList);
-          } catch (err) {
-            console.error('Failed to fetch bulk odds:', err);
-            setVisibleMatches(fixtureList);
-          }
-        } else {
-          // search mode
-          try {
-            const leagueCounts: Record<string, number> = {};
-            fixtureList.forEach(f => {
-              const lId = f.league?.id;
-              if (lId) {
-                leagueCounts[lId] = (leagueCounts[lId] || 0) + 1;
-              }
-            });
-            const topLeagues = Object.keys(leagueCounts).sort((a, b) => leagueCounts[b] - leagueCounts[a]).slice(0, 15);
-            const promises = topLeagues.map(lId => {
-              const fIds = fixtureList.filter(f => f.league?.id === Number(lId)).map(f => f.fixture.id).join(',');
-              if (!fIds) return Promise.resolve({ odds: {} });
-              return fetch(`/api/football/odds/bulk?ids=${fIds}`).then(r => r.json());
-            });
-            const results = await Promise.allSettled(promises);
-            const mergedOddsMap: Record<number, OddsValues> = {};
-            results.forEach(res => {
-              if (res.status === 'fulfilled' && res.value?.odds) Object.assign(mergedOddsMap, res.value.odds);
-            });
-            setOddsMap(mergedOddsMap);
-            setVisibleMatches(fixtureList);
-          } catch (err) {
-            console.error('Top leagues odds fetch failed', err);
-            setVisibleMatches(fixtureList);
-          }
-        }
-
-        setOddsChecking(false);
-      })
-      .catch((err) => {
-        console.error('Fixtures fetch error:', err);
-        setLoading(false);
-        setOddsChecking(false);
-      });
-  }, [leagueId, daysFilter, searchQuery]);
+    return () => {
+      unsubscribeFixtures();
+      unsubscribeOdds();
+    };
+  }, [leagueId, searchQuery]);
 
   // Use allMatches for instant local filtering if search is active, 
   // otherwise use visibleMatches (which contains the paged/api results)
