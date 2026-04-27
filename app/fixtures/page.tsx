@@ -249,7 +249,7 @@ function FixturesContent() {
     // If daysFilter is 7, show everything.
     // If daysFilter is 1 (Today), 2 (Tomorrow), etc., show ONLY that day.
     const dFilter = parseInt(daysFilter);
-    if (dFilter === 7) return true;
+    if (dFilter === 0) return true; // ALL (val 0)
 
     const matchDate = new Date(m.fixture.date);
     const today = new Date();

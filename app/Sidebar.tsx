@@ -100,10 +100,10 @@ function SidebarContent() {
   const router = useRouter();
   const currentLeague = searchParams?.get('league') || null;
 
-  const [daysFilter, setDaysFilter] = useState(parseInt(searchParams?.get('days') || '7'));
+  const [daysFilter, setDaysFilter] = useState(parseInt(searchParams?.get('days') || '0'));
 
   useEffect(() => {
-    setDaysFilter(parseInt(searchParams?.get('days') || '7'));
+    setDaysFilter(parseInt(searchParams?.get('days') || '0'));
   }, [searchParams]);
   const isLiveOpen = pathname === '/live' || searchParams?.get('live') === 'true';
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -221,13 +221,13 @@ function SidebarContent() {
               {(() => {
                 const today = new Date();
                 const pills = [
-                  { label: 'All', value: 7 },
+                  { label: 'All', value: 0 },
                   { label: 'Today', value: 1 },
                   { label: 'Tomorrow', value: 2 },
-                  ...Array.from({ length: 4 }, (_, i) => {
+                  ...Array.from({ length: 5 }, (_, i) => {
                     const d = new Date(today);
                     d.setDate(today.getDate() + i + 2);
-                    const label = d.toLocaleDateString([], { weekday: 'short', day: '2-digit' });
+                    const label = d.toLocaleDateString([], { day: '2-digit', weekday: 'short' });
                     return { label, value: i + 3 };
                   })
                 ];

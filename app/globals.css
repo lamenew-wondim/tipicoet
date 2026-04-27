@@ -2778,7 +2778,7 @@ body {
 /* --- MOBILE DAY PILLS ROW --- */
 .mobile-day-pills-row {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   overflow-x: hidden;
   padding: 2px 0 6px 0;
 }
