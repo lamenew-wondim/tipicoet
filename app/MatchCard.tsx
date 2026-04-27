@@ -35,7 +35,6 @@ export default function MatchCard({
 
     let isMounted = true;
     const fetchOdds = async () => {
-      setLoading(true);
       try {
         const endpoint = isLive
           ? `/api/football/odds/live?fixture_id=${match.fixture.id}`
@@ -58,8 +57,16 @@ export default function MatchCard({
       }
     };
 
-    fetchOdds();
-    return () => { isMounted = false; };
+    // Add a random jitter to prevent 100 components from hitting the API at the exact same millisecond
+    const delay = Math.random() * 1500;
+    const timer = setTimeout(() => {
+      if (isMounted) fetchOdds();
+    }, delay);
+
+    return () => { 
+      isMounted = false; 
+      clearTimeout(timer);
+    };
   }, [initialOdds, match.fixture.id, isLive, statusShort]);
 
   const getStatusLabel = () => {
