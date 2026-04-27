@@ -171,33 +171,32 @@ export default function AdminDepositsPage() {
           </div>
         </div>
       )}
-
       <style jsx>{`
         .admin-page-container {
-          padding: 24px; background: #fff; min-height: 100vh; position: fixed; inset: 0; z-index: 20002; overflow-y: auto; color: #333;
+          padding: 16px; background: #fff; min-height: 100vh; position: fixed; inset: 0; z-index: 20002; overflow-y: auto; color: #333;
         }
-        .admin-page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-        .back-btn { color: #333; padding: 8px; border-radius: 50%; background: #f0f0f0; display: flex; }
-        h1 { font-size: 24px; font-weight: 800; flex: 1; }
-        .stats-badge { background: #ff6b0015; color: #ff6b00; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 13px; }
+        .admin-page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .back-btn { color: #333; padding: 6px; border-radius: 50%; background: #f0f0f0; display: flex; }
+        h1 { font-size: 18px; font-weight: 800; flex: 1; }
+        .stats-badge { background: #ff6b0015; color: #ff6b00; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px; }
         
-        .deposits-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .deposit-admin-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+        .deposits-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .deposit-admin-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .phone { font-size: 18px; font-weight: 800; color: #111; }
-        .amount-badge { background: #111; color: white; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 15px; }
+        .phone { font-size: 15px; font-weight: 800; color: #111; }
+        .amount-badge { background: #111; color: white; padding: 5px 10px; border-radius: 8px; font-weight: 800; font-size: 13px; }
         
-        .proof-preview-area { position: relative; height: 180px; background: #eee; border-radius: 16px; overflow: hidden; cursor: zoom-in; }
+        .proof-preview-area { position: relative; height: 160px; background: #eee; border-radius: 12px; overflow: hidden; cursor: zoom-in; }
         .proof-preview-area img { width: 100%; height: 100%; object-fit: cover; }
-        .zoom-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; opacity: 0; transition: 0.2s; }
+        .zoom-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; opacity: 0; transition: 0.2s; }
         .proof-preview-area:hover .zoom-overlay { opacity: 1; }
         
-        .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card-actions button { padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card-actions button { padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .reject-btn { background: #fee2e2; color: #b91c1c; }
         .accept-btn { background: #111; color: white; }
         .card-actions button:disabled { opacity: 0.5; }
-        .processed-tag { grid-column: span 2; text-align: center; padding: 10px; background: #eef2f8; color: #666; border-radius: 12px; font-weight: 700; font-size: 13px; }
+        .processed-tag { grid-column: span 2; text-align: center; padding: 8px; background: #eef2f8; color: #666; border-radius: 10px; font-weight: 700; font-size: 12px; }
         
         .image-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 30000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .image-modal-content { position: relative; max-width: 90%; max-height: 90%; }
@@ -206,22 +205,22 @@ export default function AdminDepositsPage() {
         
         /* Confirm Modal */
         .confirm-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 30005; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .confirm-modal-card { background: white; width: 100%; max-width: 400px; border-radius: 28px; padding: 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .confirm-modal-card { background: white; width: 100%; max-width: 360px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .confirm-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .confirm-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .confirm-icon.accept { background: #f0fdf4; color: #15803d; }
         .confirm-icon.reject { background: #fef2f2; color: #b91c1c; }
-        h3 { font-size: 22px; font-weight: 800; margin-bottom: 12px; color: #111; }
-        p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 28px; font-weight: 500; }
-        .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .confirm-actions button { padding: 16px; border: none; border-radius: 14px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #111; }
+        p { font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 24px; font-weight: 500; }
+        .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .confirm-actions button { padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .cancel-btn { background: #f4f7fe; color: #333; }
         .ok-btn.accept { background: #111; color: white; }
         .ok-btn.reject { background: #b91c1c; color: white; }
         .confirm-actions button:hover { transform: translateY(-2px); }
-
-        .loading-state, .empty-state { text-align: center; padding: 80px 20px; }
-        .empty-state p { margin-top: 16px; font-weight: 700; color: #999; font-size: 18px; }
+ 
+        .loading-state, .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state p { margin-top: 12px; font-weight: 700; color: #999; font-size: 16px; }
       `}</style>
     </div>
   );

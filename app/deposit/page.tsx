@@ -334,41 +334,41 @@ export default function DepositPage() {
           padding: 40px 16px; overflow-y: auto;
         }
         .deposit-card {
-          background: white; width: 100%; max-width: 480px; border-radius: 24px; padding: 32px;
+          background: white; width: 100%; max-width: 440px; border-radius: 20px; padding: 24px;
           color: #333; box-shadow: 0 20px 50px rgba(0,0,0,0.4); position: relative;
         }
         .loading-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #ff6b00; border-radius: 50%; animation: spin 1s linear infinite; margin-top: 20vh; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .deposit-header { text-align: left; margin-bottom: 24px; }
-        .close-btn-round { position: absolute; top: 24px; right: 24px; background: #f4f7fe; color: #333; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        h2 { font-size: 24px; font-weight: 800; color: #111; margin-bottom: 4px; }
-        .deposit-header p { font-size: 14px; color: #888; font-weight: 600; }
-        .amount-section { margin-bottom: 24px; }
-        .amount-section label { font-size: 11px; font-weight: 800; color: #999; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
-        .amount-input-wrapper { display: flex; align-items: center; background: #f4f7fe; border-radius: 12px; padding: 0 16px; border: 1px solid #eef2f8; }
-        .amount-input-wrapper span { font-weight: 800; color: #333; font-size: 14px; margin-right: 12px; }
-        .amount-input-wrapper input { flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 16px; font-weight: 700; outline: none; color: #111; }
-        .methods-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-        .method-logo-card { background: #fff; border: 1px solid #eee; border-radius: 12px; height: 80px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; padding: 8px; }
+        .deposit-header { text-align: left; margin-bottom: 20px; }
+        .close-btn-round { position: absolute; top: 20px; right: 20px; background: #f4f7fe; color: #333; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        h2 { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 2px; }
+        .deposit-header p { font-size: 13px; color: #888; font-weight: 600; }
+        .amount-section { margin-bottom: 20px; }
+        .amount-section label { font-size: 10px; font-weight: 800; color: #999; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+        .amount-input-wrapper { display: flex; align-items: center; background: #f4f7fe; border-radius: 10px; padding: 0 14px; border: 1px solid #eef2f8; }
+        .amount-input-wrapper span { font-weight: 800; color: #333; font-size: 13px; margin-right: 10px; }
+        .amount-input-wrapper input { flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 15px; font-weight: 700; outline: none; color: #111; }
+        .methods-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .method-logo-card { background: #fff; border: 1px solid #eee; border-radius: 10px; height: 72px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; padding: 6px; }
         .method-logo-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .method-logo-card.active { border-color: #ff6b00; box-shadow: 0 0 0 2px #ff6b00; }
         .method-logo-card img { width: 100%; height: 100%; object-fit: contain; }
-        .method-details-overlay { margin-top: 24px; border-top: 1px solid #eee; padding-top: 24px; animation: fadeIn 0.3s ease; }
-        .method-details-box h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; }
-        .details-grid { background: #f8f9fa; border-radius: 16px; padding: 8px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 2px; }
-        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 10px; margin-bottom: 2px; }
+        .method-details-overlay { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; animation: fadeIn 0.3s ease; }
+        .method-details-box h3 { font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+        .details-grid { background: #f8f9fa; border-radius: 12px; padding: 6px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 1px; }
+        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 8px; margin-bottom: 1px; }
         .detail-row.highlight { cursor: pointer; transition: 0.2s; }
         .detail-row.highlight:hover { background: #f0f4ff; }
-        .detail-row .label { font-size: 12px; color: #777; font-weight: 600; }
-        .detail-row .value { font-size: 14px; color: #111; font-weight: 700; }
-        .value-copy { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #111; }
-        .copy-icon { background: #f4f7fe; color: #ff6b00; padding: 4px 8px; border-radius: 6px; font-size: 10px; min-width: 32px; display: flex; align-items: center; justify-content: center; }
-        .proof-upload-btn { width: 100%; height: 140px; border: 2px dashed #ddd; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fcfcfc; }
+        .detail-row .label { font-size: 11px; color: #777; font-weight: 600; }
+        .detail-row .value { font-size: 13px; color: #111; font-weight: 700; }
+        .value-copy { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #111; }
+        .copy-icon { background: #f4f7fe; color: #ff6b00; padding: 3px 6px; border-radius: 4px; font-size: 9px; min-width: 28px; display: flex; align-items: center; justify-content: center; }
+        .proof-upload-btn { width: 100%; height: 120px; border: 2px dashed #ddd; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fcfcfc; }
         .proof-upload-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-        .proof-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #aaa; font-weight: 600; font-size: 13px; }
+        .proof-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #aaa; font-weight: 600; font-size: 12px; }
         .proof-preview { width: 100%; height: 100%; object-fit: contain; }
-        .final-deposit-btn { width: 100%; padding: 18px; background: #ff6b00; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 24px; transition: 0.2s; }
-        .form-message { padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 14px; text-align: center; font-weight: 600; }
+        .final-deposit-btn { width: 100%; padding: 16px; background: #ff6b00; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        .form-message { padding: 10px; border-radius: 8px; margin-top: 14px; font-size: 13px; text-align: center; font-weight: 600; }
         .form-message.success { background: #dcfce7; color: #15803d; }
         .form-message.error { background: #fee2e2; color: #b91c1c; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

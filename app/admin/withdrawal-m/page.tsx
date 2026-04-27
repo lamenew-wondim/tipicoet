@@ -259,39 +259,39 @@ export default function WithdrawalMethodsPage() {
 
       <style jsx>{`
         .admin-page-container {
-          padding: 24px; background: #fff; min-height: 100vh; position: fixed; inset: 0; z-index: 20002; overflow-y: auto; color: #333;
+          padding: 16px; background: #fff; min-height: 100vh; position: fixed; inset: 0; z-index: 20002; overflow-y: auto; color: #333;
         }
-        .admin-page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
-        .view-toggle-btn { margin-left: auto; padding: 10px 16px; background: #f0f0f0; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #111; }
-        .back-btn { color: #333; padding: 8px; border-radius: 50%; background: #f0f0f0; display: flex; }
-        h1 { font-size: 24px; font-weight: 800; }
-        .admin-form-card { max-width: 600px; margin: 0 auto; }
-        .type-selector { display: flex; gap: 12px; margin-bottom: 32px; background: #f0f0f0; padding: 6px; border-radius: 12px; }
-        .type-selector button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; background: transparent; color: #666; transition: 0.2s; }
-        .type-selector button.active { background: white; color: #111; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 24px; }
-        label { display: block; font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 14px; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; font-size: 16px; outline: none; }
-        .upload-area { width: 100%; height: 140px; border: 2px dashed #ddd; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: #fcfcfc; }
+        .admin-page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .view-toggle-btn { margin-left: auto; padding: 8px 14px; background: #f0f0f0; border: none; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer; color: #111; }
+        .back-btn { color: #333; padding: 6px; border-radius: 50%; background: #f0f0f0; display: flex; }
+        h1 { font-size: 18px; font-weight: 800; }
+        .admin-form-card { max-width: 500px; margin: 0 auto; }
+        .type-selector { display: flex; gap: 8px; margin-bottom: 24px; background: #f0f0f0; padding: 5px; border-radius: 10px; }
+        .type-selector button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; background: transparent; color: #666; transition: 0.2s; }
+        .type-selector button.active { background: white; color: #111; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #888; margin-bottom: 6px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; font-size: 14px; outline: none; }
+        .upload-area { width: 100%; height: 120px; border: 2px dashed #ddd; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: #fcfcfc; }
         .preview-img { width: 100%; height: 100%; object-fit: contain; }
-        .submit-btn { width: 100%; padding: 18px; background: #111; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .submit-btn { width: 100%; padding: 16px; background: #111; color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .submit-btn:disabled { opacity: 0.5; }
-        .form-message { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: 600; }
+        .form-message { padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; text-align: center; font-weight: 600; }
         .form-message.success { background: #dcfce7; color: #15803d; }
         .form-message.error { background: #fee2e2; color: #b91c1c; }
-        .methods-list { display: flex; flex-direction: column; gap: 16px; }
-        .method-item-card { display: flex; align-items: center; padding: 16px; background: #f9f9f9; border: 1px solid #eee; border-radius: 16px; gap: 16px; }
-        .method-logo-small { width: 56px; height: 56px; background: white; border-radius: 10px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; }
+        .methods-list { display: flex; flex-direction: column; gap: 12px; }
+        .method-item-card { display: flex; align-items: center; padding: 12px; background: #f9f9f9; border: 1px solid #eee; border-radius: 14px; gap: 12px; }
+        .method-logo-small { width: 48px; height: 48px; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; }
         .method-logo-small img { width: 100%; height: 100%; object-fit: contain; }
         .method-info { flex: 1; }
-        .method-name { font-weight: 800; font-size: 15px; }
-        .method-sub { font-size: 12px; color: #666; font-weight: 600; }
-        .method-min { font-size: 12px; font-weight: 700; margin-top: 2px; }
-        .method-actions { display: flex; gap: 8px; }
-        .method-actions button { width: 34px; height: 34px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .method-name { font-weight: 800; font-size: 14px; }
+        .method-sub { font-size: 11px; color: #666; font-weight: 600; }
+        .method-min { font-size: 11px; font-weight: 700; margin-top: 1px; }
+        .method-actions { display: flex; gap: 6px; }
+        .method-actions button { width: 32px; height: 32px; border-radius: 7px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .edit-btn { background: #e3f2fd; color: #1976d2; }
         .delete-btn { background: #ffebee; color: #d32f2f; }
-        .empty-state { text-align: center; color: #999; padding: 40px; font-weight: 600; }
+        .empty-state { text-align: center; color: #999; padding: 40px; font-weight: 600; font-size: 13px; }
       `}</style>
     </div>
   );
