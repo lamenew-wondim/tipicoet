@@ -94,7 +94,7 @@ function LeagueGroup({ leagueId, leagueName, leagueLogo, country, matches, oddsM
 function FixturesContent() {
   const searchParams = useSearchParams();
   const leagueId = searchParams?.get('league');
-  const daysFilter = searchParams?.get('days') || '7';
+  const daysFilter = searchParams?.get('days') || '0';
 
   const [allMatches, setAllMatches] = useState<any[]>([]);
   const [visibleMatches, setVisibleMatches] = useState<any[]>([]);
@@ -299,7 +299,7 @@ function FixturesContent() {
 
   return (
     <div>
-      {!leagueId && !searchQuery && <PopularEvents />}
+      {!leagueId && !searchQuery && daysFilter === '0' && <PopularEvents />}
 
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10, flexWrap: 'nowrap' }}>
         <h1 className="page-title" style={{ margin: 0, fontSize: 18, whiteSpace: 'nowrap' }}>Pre-Match</h1>

@@ -15,10 +15,35 @@ export default function Header() {
     mode: 'login'
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [balance, setBalance] = useState('0.00 Birr');
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    setIsLoggedIn(!!token);
+    const initHeader = async () => {
+      let token = localStorage.getItem('auth_token');
+      let uid = localStorage.getItem('user_uid');
+      setIsLoggedIn(!!token);
+
+      if (token && !uid) {
+        // Recover UID if missing from old session
+        try {
+          const meRes = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const meData = await meRes.json();
+          if (meData.success) {
+            uid = meData.uid;
+            localStorage.setItem('user_uid', uid || '');
+            localStorage.setItem('user_phone', meData.phoneNumber || '');
+          }
+        } catch (e) { console.error("Session recovery failed", e); }
+      }
+
+      if (token && uid) {
+        fetchBalance(uid);
+      }
+    };
+
+    initHeader();
 
     const onOpenDrawer = () => setDrawerOpen(true);
     const onOpenAuth = (e: Event) => {
@@ -32,12 +57,10 @@ export default function Header() {
     const onOpenSettings = () => setShowSettings(true);
     window.addEventListener('open-settings-modal', onOpenSettings);
     
-    // Also listen to storage changes for auth token to sync state
     const handleStorageChange = () => {
-      setIsLoggedIn(!!localStorage.getItem('auth_token'));
+      initHeader();
     };
     window.addEventListener('storage', handleStorageChange);
-    // Custom event for same-tab login updates
     window.addEventListener('auth-state-changed', handleStorageChange);
 
     return () => {
@@ -49,14 +72,27 @@ export default function Header() {
     };
   }, []);
 
+  const fetchBalance = async (uid: string) => {
+    try {
+      const res = await fetch(`/api/user/profile?userId=${uid}`);
+      const data = await res.json();
+      if (data.success) {
+        setBalance(`${data.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })} Birr`);
+      }
+    } catch (err) {
+      console.error('Balance fetch error:', err);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_role');
-    window.location.reload();
+    localStorage.removeItem('user_uid');
+    localStorage.removeItem('user_phone');
+    window.location.href = '/';
   };
 
-  // Dynamic balance simulation (would be from state/API)
-  const currentBalance = "0.00 Birr";
+  const currentBalance = balance;
   
   const getBalanceStyle = (text: string) => {
     const len = text.length;

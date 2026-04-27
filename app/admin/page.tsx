@@ -29,7 +29,8 @@ export default function AdminDashboard() {
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_uid');
     localStorage.removeItem('user_phone');
-    router.push('/');
+    // Use window.location.href to force a full reload and reset Header state
+    window.location.href = '/';
   };
 
   const adminButtons = [

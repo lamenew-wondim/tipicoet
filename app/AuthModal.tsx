@@ -88,8 +88,13 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       
       setTimeout(() => {
         onClose();
+        const redirectToDeposit = localStorage.getItem('redirect_to_deposit');
+        
         if (data.role === 'admin') {
           window.location.href = '/admin';
+        } else if (redirectToDeposit === 'true') {
+          localStorage.removeItem('redirect_to_deposit');
+          window.location.href = '/deposit';
         } else {
           window.location.reload();
         }

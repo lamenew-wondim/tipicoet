@@ -97,6 +97,7 @@ export default function BottomNav() {
               style={item.isAccent ? { color: '#ff6b00' } : undefined}
               onClick={() => {
                 if (!isLoggedIn) {
+                  localStorage.setItem('redirect_to_deposit', 'true');
                   window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'login' }));
                 } else {
                   router.push('/deposit');

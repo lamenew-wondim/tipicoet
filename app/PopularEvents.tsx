@@ -18,10 +18,16 @@ export default function PopularEvents() {
       setLoading(true);
       try {
         // 1. Fetch live matches first (always top priority)
-        const liveRes = await fetch('/api/football/live');
-        if (!liveRes.ok) throw new Error('Live fetch failed');
-        const liveData = await liveRes.json();
-        const livePool = liveData.response || [];
+        let livePool = [];
+        try {
+          const liveRes = await fetch('/api/football/live');
+          if (liveRes.ok) {
+            const liveData = await liveRes.json();
+            livePool = liveData.response || [];
+          }
+        } catch (e) {
+          console.error("Live fetch failed", e);
+        }
 
         // 2. Fetch upcoming fixtures from TOP LEAGUES specifically to ensure they are tracked.
         const focusLeagues = [39, 140, 78, 135, 61, 2, 3]; 

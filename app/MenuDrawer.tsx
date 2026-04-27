@@ -76,6 +76,9 @@ export default function MenuDrawer() {
                   if (item.label === 'Account Settings') {
                     window.dispatchEvent(new CustomEvent('open-settings-modal'));
                   } else {
+                    if (item.label === 'Deposit') {
+                      localStorage.setItem('redirect_to_deposit', 'true');
+                    }
                     window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: 'login' }));
                   }
                 } else {
