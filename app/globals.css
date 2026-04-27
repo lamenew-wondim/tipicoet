@@ -2775,6 +2775,44 @@ body {
     linear-gradient(to right, #d1d5db var(--progress, 100%), #333 var(--progress, 100%));
 }
 
+/* --- MOBILE DAY PILLS ROW --- */
+.mobile-day-pills-row {
+  display: flex;
+  gap: 3px;
+  overflow-x: hidden;
+  padding: 2px 0 6px 0;
+}
+
+.mobile-day-pill {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 2px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-day-pill:hover {
+  background: #f0f0f0;
+}
+
+.mobile-day-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  font-weight: 800;
+}
+
 /* =====================================================
    PREMATCH INFO SECTION (CHAMPX STYLE)
    ===================================================== */

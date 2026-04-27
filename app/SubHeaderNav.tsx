@@ -26,12 +26,12 @@ export default function SubHeaderNav() {
           <div className="filter-days-lbl">Events</div>
         </div>
         <div className="filter-slider-col">
-          <input 
-            type="range" 
-            min="1" max="7" 
-            value={searchValue} 
-            onChange={(e) => setSearchValue(parseInt(e.target.value))} 
-            className="filter-range-input" 
+          <input
+            type="range"
+            min="1" max="7"
+            value={searchValue}
+            onChange={(e) => setSearchValue(parseInt(e.target.value))}
+            className="filter-range-input"
           />
           <div className="slider-ticks">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span>

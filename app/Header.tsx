@@ -17,8 +17,28 @@ export default function Header() {
     setIsLoggedIn(!!token);
 
     const onOpenDrawer = () => setDrawerOpen(true);
+    const onOpenAuth = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setAuthModal({ isOpen: true, mode: customEvent.detail || 'login' });
+    };
+
     window.addEventListener('open-mobile-drawer', onOpenDrawer);
-    return () => window.removeEventListener('open-mobile-drawer', onOpenDrawer);
+    window.addEventListener('open-auth-modal', onOpenAuth);
+    
+    // Also listen to storage changes for auth token to sync state
+    const handleStorageChange = () => {
+      setIsLoggedIn(!!localStorage.getItem('auth_token'));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    // Custom event for same-tab login updates
+    window.addEventListener('auth-state-changed', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('open-mobile-drawer', onOpenDrawer);
+      window.removeEventListener('open-auth-modal', onOpenAuth);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-state-changed', handleStorageChange);
+    };
   }, []);
 
   const handleLogout = () => {

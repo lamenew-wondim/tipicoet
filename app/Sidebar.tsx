@@ -100,7 +100,11 @@ function SidebarContent() {
   const router = useRouter();
   const currentLeague = searchParams?.get('league') || null;
 
-  const [daysFilter, setDaysFilter] = useState(7);
+  const [daysFilter, setDaysFilter] = useState(parseInt(searchParams?.get('days') || '7'));
+
+  useEffect(() => {
+    setDaysFilter(parseInt(searchParams?.get('days') || '7'));
+  }, [searchParams]);
   const isLiveOpen = pathname === '/live' || searchParams?.get('live') === 'true';
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,6 +118,13 @@ function SidebarContent() {
     } else {
       params.delete('q');
     }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const updateDaysParam = (val: number) => {
+    setDaysFilter(val);
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set('days', val.toString());
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -206,22 +217,30 @@ function SidebarContent() {
             </button>
           </div>
           {!isLiveOpen && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ lineHeight: 1.1, fontWeight: 700, fontSize: 13, width: 44, color: 'var(--text-main)' }}>
-                {daysFilter === 7 ? 'All' : daysFilter === 1 ? '24h' : `${daysFilter}d`}<br />Events
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="7"
-                value={daysFilter}
-                onChange={(e) => setDaysFilter(parseInt(e.target.value))}
-                className="days-slider"
-                style={{
-                  '--progress': `${((daysFilter - 1) / 6) * 100}%`,
-                  '--gap-color': 'var(--bg-main)'
-                } as React.CSSProperties}
-              />
+            <div className="mobile-day-pills-row">
+              {(() => {
+                const today = new Date();
+                const pills = [
+                  { label: 'All', value: 7 },
+                  { label: 'Today', value: 1 },
+                  { label: 'Tomorrow', value: 2 },
+                  ...Array.from({ length: 4 }, (_, i) => {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() + i + 2);
+                    const label = d.toLocaleDateString([], { weekday: 'short', day: '2-digit' });
+                    return { label, value: i + 3 };
+                  })
+                ];
+                return pills.map(({ label, value }) => (
+                  <button
+                    key={value}
+                    onClick={() => updateDaysParam(value)}
+                    className={`mobile-day-pill${daysFilter === value ? ' active' : ''}`}
+                  >
+                    {label}
+                  </button>
+                ));
+              })()}
             </div>
           )}
         </div>

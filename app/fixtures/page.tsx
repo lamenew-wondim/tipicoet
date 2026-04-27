@@ -238,10 +238,25 @@ function FixturesContent() {
   }, [leagueId, daysFilter, searchQuery]);
 
   const filteredMatches = visibleMatches.filter(m => {
+    // 1. Search Query Filter
     const q = searchQuery.toLowerCase();
-    return (m.teams?.home?.name?.toLowerCase().includes(q)) ||
+    const matchesSearch = (m.teams?.home?.name?.toLowerCase().includes(q)) ||
       (m.teams?.away?.name?.toLowerCase().includes(q)) ||
       (m.league?.name?.toLowerCase().includes(q));
+    if (!matchesSearch) return false;
+
+    // 2. Day Filter Logic
+    // If daysFilter is 7, show everything.
+    // If daysFilter is 1 (Today), 2 (Tomorrow), etc., show ONLY that day.
+    const dFilter = parseInt(daysFilter);
+    if (dFilter === 7) return true;
+
+    const matchDate = new Date(m.fixture.date);
+    const today = new Date();
+    const targetDate = new Date();
+    targetDate.setDate(today.getDate() + (dFilter - 1));
+
+    return matchDate.toDateString() === targetDate.toDateString();
   });
 
   const filteredLeagues = searchQuery.length >= 2
