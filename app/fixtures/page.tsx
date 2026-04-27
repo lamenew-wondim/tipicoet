@@ -108,7 +108,21 @@ function FixturesContent() {
   // Sync with URL
   useEffect(() => {
     setSearchQuery(urlQuery);
+    setLocalSearch(urlQuery);
   }, [urlQuery]);
+
+  const [localSearch, setLocalSearch] = useState(urlQuery);
+
+  // Debounce global search fetch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only trigger global API search if query is at least 2 chars
+      if (localSearch.length >= 2 || localSearch.length === 0) {
+        setSearchQuery(localSearch);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   // Fetch leagues once for search
   useEffect(() => {
@@ -237,17 +251,19 @@ function FixturesContent() {
       });
   }, [leagueId, daysFilter, searchQuery]);
 
-  const filteredMatches = visibleMatches.filter(m => {
+  // Use allMatches for instant local filtering if search is active, 
+  // otherwise use visibleMatches (which contains the paged/api results)
+  const sourceMatches = localSearch.length > 0 ? allMatches : visibleMatches;
+
+  const filteredMatches = sourceMatches.filter(m => {
     // 1. Search Query Filter
-    const q = searchQuery.toLowerCase();
+    const q = localSearch.toLowerCase();
     const matchesSearch = (m.teams?.home?.name?.toLowerCase().includes(q)) ||
       (m.teams?.away?.name?.toLowerCase().includes(q)) ||
       (m.league?.name?.toLowerCase().includes(q));
     if (!matchesSearch) return false;
 
     // 2. Day Filter Logic
-    // If daysFilter is 7, show everything.
-    // If daysFilter is 1 (Today), 2 (Tomorrow), etc., show ONLY that day.
     const dFilter = parseInt(daysFilter);
     if (dFilter === 0) return true; // ALL (val 0)
 
@@ -262,8 +278,6 @@ function FixturesContent() {
   const filteredLeagues = searchQuery.length >= 2
     ? allLeagues.filter(l => l.name?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10)
     : [];
-
-  if (loading && visibleMatches.length === 0) return <div className="loader"></div>;
 
   // Group matches by league for the landing page view
   const isLandingPage = !leagueId && !searchQuery;
@@ -294,14 +308,16 @@ function FixturesContent() {
           <input
             type="text"
             placeholder="Search teams or leagues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             style={{ background: 'transparent', border: 'none', color: 'white', flex: 1, outline: 'none', fontSize: 13 }}
           />
         </div>
       </div>
 
-      {visibleMatches.length === 0 && !loading && (
+      {loading && visibleMatches.length === 0 ? (
+        <div className="loader"></div>
+      ) : visibleMatches.length === 0 && !loading && (
         <div className="error-msg">
           No upcoming matches found for{' '}
           {searchQuery ? `"${searchQuery}"` : (leagueId ? (allMatches[0]?.league?.name || `League ${leagueId}`) : 'this category')}.

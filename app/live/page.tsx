@@ -24,7 +24,14 @@ function LiveContent() {
    // Sync with URL (sidebar search)
    useEffect(() => {
      setSearchQuery(urlQuery);
+     setLocalSearch(urlQuery);
    }, [urlQuery]);
+
+   const [localSearch, setLocalSearch] = useState(urlQuery);
+
+   useEffect(() => {
+     setSearchQuery(localSearch);
+   }, [localSearch]);
 
    // Fetch leagues once for search discovery
    useEffect(() => {
@@ -127,7 +134,7 @@ function LiveContent() {
   }, [leagueId]);
 
   const filteredMatches = visibleMatches.filter(m => {
-    const q = searchQuery.toLowerCase();
+    const q = localSearch.toLowerCase();
     return (m.teams?.home?.name?.toLowerCase().includes(q)) || 
            (m.teams?.away?.name?.toLowerCase().includes(q)) ||
            (m.league?.name?.toLowerCase().includes(q));
@@ -137,29 +144,31 @@ function LiveContent() {
     ? allLeagues.filter(l => l.name?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10)
     : [];
 
-  if (loading && visibleMatches.length === 0) return <div className="loader"></div>;
+
 
   return (
     <div>
 
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Live In-Play</h1>
-          {oddsChecking && <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>Updating Odds...</span>}
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10, flexWrap: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <h1 className="page-title" style={{ margin: 0, fontSize: 18, whiteSpace: 'nowrap' }}>Live In-Play</h1>
+          {oddsChecking && <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, whiteSpace: 'nowrap' }}>Updating...</span>}
         </div>
-        <div className="search-bar" style={{ width: 280, margin: 0 }}>
+        <div className="search-bar" style={{ flex: 1, maxWidth: 220, margin: 0, minWidth: 0 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input 
             type="text" 
             placeholder="Search live teams..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             style={{ background: 'transparent', border: 'none', color: 'white', flex: 1, outline: 'none', fontSize: 13 }} 
           />
         </div>
       </div>
 
-      {visibleMatches.length === 0 && !loading && (
+      {loading && visibleMatches.length === 0 ? (
+        <div className="loader"></div>
+      ) : visibleMatches.length === 0 && !loading && (
         <div className="error-msg">
           No live matches available at the moment {searchQuery ? `matching "${searchQuery}"` : (leagueId ? `for League ${leagueId}` : '')}.
         </div>
