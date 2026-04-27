@@ -1,16 +1,15 @@
+'use client';
 import Link from 'next/link';
-import { OddsValues } from '../lib/odds';
+import { OddsValues, extractBestOdds } from '../lib/odds';
+import { useEffect, useState } from 'react';
 
 /**
- * MatchCard - Pure UI Component
- * 
- * This component is now purely responsible for rendering.
- * All data fetching and polling is handled by parent pages
- * (fixtures/page.tsx or live/page.tsx) to ensure efficient API usage.
+ * MatchCard - Now fetches its own odds if none are provided
+ * to ensure fast display just like the match detail page.
  */
 export default function MatchCard({
   match,
-  odds,
+  odds: initialOdds,
 }: {
   match: any;
   odds?: OddsValues | null;
@@ -21,6 +20,47 @@ export default function MatchCard({
     match.fixture.status.short === 'HT';
 
   const statusShort = match.fixture.status.short;
+  
+  const [localOdds, setLocalOdds] = useState<OddsValues | null>(initialOdds || null);
+  const [loading, setLoading] = useState(!initialOdds && statusShort === 'NS');
+
+  useEffect(() => {
+    if (initialOdds) {
+      setLocalOdds(initialOdds);
+      setLoading(false);
+      return;
+    }
+
+    if (statusShort !== 'NS' && !isLive) return;
+
+    let isMounted = true;
+    const fetchOdds = async () => {
+      setLoading(true);
+      try {
+        const endpoint = isLive
+          ? `/api/football/odds/live?fixture_id=${match.fixture.id}`
+          : `/api/football/odds?fixture_id=${match.fixture.id}`;
+        
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        
+        if (isMounted) {
+          const leagueOdds = data.response?.[0];
+          if (leagueOdds) {
+            const bestOdds = extractBestOdds(leagueOdds);
+            setLocalOdds(bestOdds);
+          }
+        }
+      } catch (err) {
+        console.error('MatchCard fetch odds error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchOdds();
+    return () => { isMounted = false; };
+  }, [initialOdds, match.fixture.id, isLive, statusShort]);
 
   const getStatusLabel = () => {
     if (statusShort === 'NS') return 'Scheduled';
@@ -39,8 +79,9 @@ export default function MatchCard({
   );
 
   const display = (key: keyof OddsValues) => {
-    if (!odds || !odds[key]) return isLive ? lockIcon : '-';
-    return odds[key];
+    if (loading) return <span style={{ opacity: 0.5 }}>...</span>;
+    if (!localOdds || !localOdds[key]) return isLive ? lockIcon : '-';
+    return localOdds[key];
   };
 
   const targetUrl = isLive
