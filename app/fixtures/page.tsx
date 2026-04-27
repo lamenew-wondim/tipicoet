@@ -8,12 +8,12 @@ import { extractBestOdds, OddsValues } from '../../lib/odds';
 
 // Leagues to prioritize on the landing page (in display order)
 const PRIORITY_LEAGUES = [
+  { id: 2, name: 'UEFA Champions League' },
+  { id: 39, name: 'England. Premier League' },
   { id: 140, name: 'Spain. La Liga' },
   { id: 135, name: 'Italy. Serie A' },
-  { id: 39, name: 'England. Premier League' },
   { id: 78, name: 'Germany. Bundesliga' },
   { id: 61, name: 'France. Ligue 1' },
-  { id: 2, name: 'UEFA Champions League' },
   { id: 3, name: 'UEFA Europa League' },
   { id: 848, name: 'UEFA Europa Conference League' },
   { id: 94, name: 'Portugal. Primeira Liga' },

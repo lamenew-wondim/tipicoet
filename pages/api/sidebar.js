@@ -21,14 +21,14 @@ export default async function handler(req, res) {
 
       // To ensure Top Leagues are displayed unconditionally in the sidebar
       // Specific 10 Top Leagues IDs in requested order
-      const famousIds = [2, 5, 233, 235, 140, 3, 848, 13, 39, 106];
+      const famousIds = [2, 39, 140, 135, 78, 61, 3, 848, 94, 88];
 
       famousIds.forEach(id => {
         activeLeagueIds.add(id);
       });
     }
 
-    const famousIdsOrder = [2, 5, 233, 235, 140, 3, 848, 13, 39, 106];
+    const famousIdsOrder = [2, 39, 140, 135, 78, 61, 3, 848, 94, 88];
 
     // For live, only show leagues that actually have live games.
     // For prematch, allow browsing all leagues.

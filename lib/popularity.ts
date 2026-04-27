@@ -7,12 +7,12 @@
 
 // IDs for high-priority leagues (API-Sports IDs)
 export const TOP_LEAGUES = [
+  2,   // Champions League
   39,  // Premier League
   140, // La Liga
-  78,  // Bundesliga
   135, // Serie A
+  78,  // Bundesliga
   61,  // Ligue 1
-  2,   // Champions League
   3,   // Europa League
   848, // Conference League
   1,   // World Cup
@@ -84,9 +84,11 @@ export function calculatePopularity(match: any, weights: PopularityWeights = DEF
   if (TOP_LEAGUES.includes(match.league.id)) {
     score += weights.topLeague;
     
-    // EXTRA BOOST for Premier League (ID 39) as requested
-    if (match.league.id === 39) {
-      score += 150; 
+    // EXTRA BOOST for Elite Leagues
+    if (match.league.id === 2) {
+      score += 200; // Champions League - Highest Priority
+    } else if (match.league.id === 39) {
+      score += 150; // Premier League - Second Priority
     }
   }
 
