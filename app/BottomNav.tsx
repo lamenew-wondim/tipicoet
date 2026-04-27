@@ -120,6 +120,9 @@ export default function BottomNav() {
               if (item.label === 'Sports') {
                 window.dispatchEvent(new CustomEvent('open-mobile-drawer'));
               }
+              if (item.label === 'Menu') {
+                window.dispatchEvent(new CustomEvent('open-menu-drawer'));
+              }
               if (item.href === '#') {
                 e.preventDefault();
               }

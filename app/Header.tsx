@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AuthModal from './AuthModal';
+import SettingsModal from './SettingsModal';
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -11,6 +12,7 @@ export default function Header() {
     isOpen: false,
     mode: 'login'
   });
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -25,6 +27,9 @@ export default function Header() {
     window.addEventListener('open-mobile-drawer', onOpenDrawer);
     window.addEventListener('open-auth-modal', onOpenAuth);
     
+    const onOpenSettings = () => setShowSettings(true);
+    window.addEventListener('open-settings-modal', onOpenSettings);
+    
     // Also listen to storage changes for auth token to sync state
     const handleStorageChange = () => {
       setIsLoggedIn(!!localStorage.getItem('auth_token'));
@@ -36,6 +41,7 @@ export default function Header() {
     return () => {
       window.removeEventListener('open-mobile-drawer', onOpenDrawer);
       window.removeEventListener('open-auth-modal', onOpenAuth);
+      window.removeEventListener('open-settings-modal', onOpenSettings);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth-state-changed', handleStorageChange);
     };
@@ -95,7 +101,7 @@ export default function Header() {
                     <Link href="/results" className="dropdown-item">Bet History</Link>
                     <div className="dropdown-item">Betslip check</div>
                     <div className="dropdown-item">Transaction History</div>
-                    <div className="dropdown-item">Account settings</div>
+                     <div className="dropdown-item" onClick={() => setShowSettings(true)}>Account settings</div>
                     <div className="dropdown-item logout" onClick={handleLogout}>Log out</div>
                   </div>
                 )}
@@ -116,6 +122,10 @@ export default function Header() {
         isOpen={authModal.isOpen}
         onClose={() => setAuthModal({ ...authModal, isOpen: false })}
         initialMode={authModal.mode}
+      />
+      <SettingsModal 
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
     </>
   );

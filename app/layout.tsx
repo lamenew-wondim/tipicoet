@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
+import MenuDrawer from './MenuDrawer';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         </div>
 
         <BottomNav />
+        <MenuDrawer />
       </body>
     </html>
   );
