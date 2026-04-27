@@ -12,7 +12,14 @@ export default async function handler(req, res) {
       const idList = ids.split(',');
       
       // Fetch in parallel
-      const promises = idList.map(id => fetchFootball(`/odds?fixture=${id}&bet=1`, 300));
+      const promises = idList.map(async id => {
+        let data = await fetchFootball(`/odds?fixture=${id}&bet=1`, 300);
+        if ((!data.response || data.response.length === 0) || data.error) {
+          const fb8 = await fetchFootball(`/odds?fixture=${id}&bet=1&bookmaker=8`, 300);
+          if (fb8.response?.length > 0) data = fb8;
+        }
+        return data;
+      });
       const results = await Promise.all(promises);
 
       for (const data of results) {

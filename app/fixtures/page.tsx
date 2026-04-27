@@ -153,8 +153,9 @@ function FixturesContent() {
         // Fetch odds for each priority league
         const oddsResults = await Promise.allSettled(
           leagueIds.map(id => {
-            const season = fixtureList.find(f => f.league?.id === id)?.league?.season || currentYear;
-            return fetch(`/api/football/odds/bulk?league=${id}&season=${season}`).then(r => r.json());
+            const fIds = fixtureList.filter(f => f.league?.id === id).map(f => f.fixture.id).join(',');
+            if (!fIds) return Promise.resolve({ value: { odds: {} } });
+            return fetch(`/api/football/odds/bulk?ids=${fIds}`).then(r => r.json());
           })
         );
 
@@ -189,8 +190,8 @@ function FixturesContent() {
 
         if (leagueId) {
           try {
-            const season = fixtureList[0]?.league?.season || currentYear;
-            const oddsRes = await fetch(`/api/football/odds/bulk?league=${leagueId}&season=${season}`);
+            const fIds = fixtureList.map(f => f.fixture.id).join(',');
+            const oddsRes = await fetch(`/api/football/odds/bulk?ids=${fIds}`);
             const oddsData = await oddsRes.json();
             if (oddsData.odds) setOddsMap(oddsData.odds);
             setVisibleMatches(fixtureList);
@@ -202,18 +203,18 @@ function FixturesContent() {
           // search mode
           try {
             const leagueCounts: Record<string, number> = {};
-            const leagueSeasons: Record<string, number> = {};
             fixtureList.forEach(f => {
               const lId = f.league?.id;
               if (lId) {
                 leagueCounts[lId] = (leagueCounts[lId] || 0) + 1;
-                if (!leagueSeasons[lId]) leagueSeasons[lId] = f.league.season || currentYear;
               }
             });
             const topLeagues = Object.keys(leagueCounts).sort((a, b) => leagueCounts[b] - leagueCounts[a]).slice(0, 15);
-            const promises = topLeagues.map(lId =>
-              fetch(`/api/football/odds/bulk?league=${lId}&season=${leagueSeasons[lId]}`).then(r => r.json())
-            );
+            const promises = topLeagues.map(lId => {
+              const fIds = fixtureList.filter(f => f.league?.id === Number(lId)).map(f => f.fixture.id).join(',');
+              if (!fIds) return Promise.resolve({ odds: {} });
+              return fetch(`/api/football/odds/bulk?ids=${fIds}`).then(r => r.json());
+            });
             const results = await Promise.allSettled(promises);
             const mergedOddsMap: Record<number, OddsValues> = {};
             results.forEach(res => {
